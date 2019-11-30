@@ -5,13 +5,14 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 //mySession holds a Session Cookie so I can download the input fast :D
 var mySession = "53616c7465645f5f230686c3505f68db91af869d933816c14850e69d30dde877ce7cc2b5c861a7a892770cef116cc3c8"
 
 func Load(year string, exercise string) (*os.File, error) {
-	fileName := fmt.Sprintf("%s/%s_%s.txt", exercise, year, exercise)
+	fileName := fileNameSetter(year, exercise)
 
 	if !fileExists(fileName) {
 		//https://adventofcode.com/2018/day/1/input
@@ -27,6 +28,14 @@ func Load(year string, exercise string) (*os.File, error) {
 	}
 
 	return file, nil
+}
+
+func fileNameSetter(year string, exercise string) string {
+	exerciseFolder := exercise
+	if i, err := strconv.Atoi(exercise); err == nil && i < 10 {
+		exerciseFolder = "0" + exerciseFolder
+	}
+	return fmt.Sprintf("%s/%s_%s.txt", exerciseFolder, year, exercise)
 }
 
 // DownloadFile will download a url to a local file. It's efficient because it will
