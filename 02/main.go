@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/johnholiver/advent-of-code-2019/02/computer"
+	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"

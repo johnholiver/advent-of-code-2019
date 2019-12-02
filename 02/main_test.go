@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -11,19 +12,23 @@ import (
 //1,1,1,4,99,5,6,0,99 becomes 30,1,1,4,2,5,6,0,99.
 
 func Test_part1(t *testing.T) {
-	m := initMemory("1,0,0,0,99")
-	processMemory(m)
+	m := computer.NewMemory("1,0,0,0,99")
+	p := computer.NewProcessor(m)
+	p.Process()
 	assert.Equal(t, "2,0,0,0,99", m.String())
 
-	m = initMemory("2,3,0,3,99")
-	processMemory(m)
+	m = computer.NewMemory("2,3,0,3,99")
+	p = computer.NewProcessor(m)
+	p.Process()
 	assert.Equal(t, "2,3,0,6,99", m.String())
 
-	m = initMemory("2,4,4,5,99,0")
-	processMemory(m)
+	m = computer.NewMemory("2,4,4,5,99,0")
+	p = computer.NewProcessor(m)
+	p.Process()
 	assert.Equal(t, "2,4,4,5,99,9801", m.String())
 
-	m = initMemory("1,1,1,4,99,5,6,0,99")
-	processMemory(m)
+	m = computer.NewMemory("1,1,1,4,99,5,6,0,99")
+	p = computer.NewProcessor(m)
+	p.Process()
 	assert.Equal(t, "30,1,1,4,2,5,6,0,99", m.String())
 }
