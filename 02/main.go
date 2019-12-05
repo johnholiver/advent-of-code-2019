@@ -42,7 +42,10 @@ func part1(file *os.File) string {
 	m.Variables[1] = 12
 	m.Variables[2] = 2
 
-	p := computer.NewProcessor(m)
+	i := computer.NewIO(nil)
+	o := computer.NewIO(nil)
+
+	p := computer.NewProcessor(i, o, m)
 
 	err := p.Process()
 	if err != nil {
@@ -65,6 +68,9 @@ func part2(file *os.File) string {
 		log.Fatal(err)
 	}
 
+	i := computer.NewIO(nil)
+	o := computer.NewIO(nil)
+
 	// Find 19690720
 	for noun := 0; noun <= 99; noun++ {
 		for verb := 0; verb <= 99; verb++ {
@@ -73,7 +79,7 @@ func part2(file *os.File) string {
 			m.Variables[1] = noun
 			m.Variables[2] = verb
 
-			p := computer.NewProcessor(m)
+			p := computer.NewProcessor(i, o, m)
 			err := p.Process()
 			if err != nil {
 				log.Fatal(err)

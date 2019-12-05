@@ -1,60 +1,87 @@
 package computer
 
-type Instruction int
-
-const (
-	Sum      Instruction = 1
-	Multiply Instruction = 2
-	Halt     Instruction = 99
-)
-
 type Processor struct {
+	Input  *IO
+	Output *IO
 	Memory *Memory
 	PC     int
 }
 
-func NewProcessor(m *Memory) *Processor {
+func NewProcessor(input *IO, output *IO, m *Memory) *Processor {
 	return &Processor{
+		input,
+		output,
 		m,
 		0,
 	}
 }
 
 func (p *Processor) GetInstruction() Instruction {
-	return Instruction(p.Memory.Variables[p.PC])
+	value := p.Memory.Read(p.PC, ParamMode(1))
+	return NewInstruction(int(value))
 }
 
-func (p *Processor) NextInstruction() {
-	p.PC += 4
+func (p *Processor) NextInstruction(instr Instruction) {
+	p.PC += instr.Next()
 }
 
-func (p *Processor) ExecInstruction() {
-	var instr Instruction
-	var addr1, addr2, addr3 int
-	instr = p.GetInstruction()
-	addr1 = p.Memory.Variables[p.PC+1]
-	addr2 = p.Memory.Variables[p.PC+2]
-	addr3 = p.Memory.Variables[p.PC+3]
-
-	switch instr {
-	case Sum:
-		op1 := p.Memory.Variables[addr1]
-		op2 := p.Memory.Variables[addr2]
-		p.Memory.Variables[addr3] = op1 + op2
-	case Multiply:
-		op1 := p.Memory.Variables[addr1]
-		op2 := p.Memory.Variables[addr2]
-		p.Memory.Variables[addr3] = op1 * op2
-	case Halt:
+func (p *Processor) ExecInstruction(instr Instruction) {
+	switch instr.opcode {
+	case OpcodeSum:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
+		p.Memory.Write(p.PC+3, op1+op2, instr.pMode[2])
+	case OpcodeMultiply:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
+		p.Memory.Write(p.PC+3, op1*op2, instr.pMode[2])
+	case OpcodeInput:
+		p.Memory.Write(p.PC+1, p.Input.Read(), instr.pMode[0])
+	case OpcodeOutput:
+		p.Output.Write(p.Memory.Read(p.PC+1, instr.pMode[0]))
+	case OpcodeJumpTrue:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
+		jumpTo := p.PC + instr.len()
+		if op1 != 0 {
+			jumpTo = op2
+		}
+		p.PC = jumpTo
+	case OpcodeJumpFalse:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
+		jumpTo := p.PC + instr.len()
+		if op1 == 0 {
+			jumpTo = op2
+		}
+		p.PC = jumpTo
+	case OpcodeLessThen:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
+		value := 0
+		if op1 < op2 {
+			value = 1
+		}
+		p.Memory.Write(p.PC+3, value, instr.pMode[2])
+	case OpcodeEqual:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
+		value := 0
+		if op1 == op2 {
+			value = 1
+		}
+		p.Memory.Write(p.PC+3, value, instr.pMode[2])
+	case OpcodeHalt:
 		//do nothing
 	}
 }
 
 func (p *Processor) Process() error {
 	for {
-		p.ExecInstruction()
-		p.NextInstruction()
-		if p.GetInstruction() == Halt {
+		instr := p.GetInstruction()
+		p.ExecInstruction(instr)
+		p.NextInstruction(instr)
+		if instr.opcode == OpcodeHalt {
 			break
 		}
 	}
