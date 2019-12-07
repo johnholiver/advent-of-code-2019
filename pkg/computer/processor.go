@@ -1,18 +1,22 @@
 package computer
 
 type Processor struct {
-	Input  *IO
-	Output *IO
-	Memory *Memory
-	PC     int
+	Input         IO
+	Output        IO
+	Memory        *Memory
+	PC            int
+	isInterrupted bool
+	IsHalted      bool
 }
 
-func NewProcessor(input *IO, output *IO, m *Memory) *Processor {
+func NewProcessor(input IO, output IO, m *Memory) *Processor {
 	return &Processor{
 		input,
 		output,
 		m,
 		0,
+		true,
+		false,
 	}
 }
 
@@ -38,7 +42,7 @@ func (p *Processor) ExecInstruction(instr Instruction) {
 	case OpcodeInput:
 		p.Memory.Write(p.PC+1, p.Input.Read(), instr.pMode[0])
 	case OpcodeOutput:
-		p.Output.Write(p.Memory.Read(p.PC+1, instr.pMode[0]))
+		p.Output.Append(p.Memory.Read(p.PC+1, instr.pMode[0]))
 	case OpcodeJumpTrue:
 		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
 		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
@@ -72,16 +76,25 @@ func (p *Processor) ExecInstruction(instr Instruction) {
 		}
 		p.Memory.Write(p.PC+3, value, instr.pMode[2])
 	case OpcodeHalt:
-		//do nothing
+		p.Halt()
 	}
 }
 
+func (p *Processor) Interrupt() {
+	p.isInterrupted = true
+}
+
+func (p *Processor) Halt() {
+	p.IsHalted = true
+}
+
 func (p *Processor) Process() error {
+	p.isInterrupted = false
 	for {
 		instr := p.GetInstruction()
 		p.ExecInstruction(instr)
 		p.NextInstruction(instr)
-		if instr.opcode == OpcodeHalt {
+		if p.isInterrupted || p.IsHalted {
 			break
 		}
 	}

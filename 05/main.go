@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
+	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"
@@ -37,8 +38,9 @@ func part1(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	i := computer.NewIO([]int{1})
-	o := computer.NewIO(make([]int, 1))
+	i := computer_io.NewTape()
+	i.Set([]int{1})
+	o := computer_io.NewTape()
 
 	p := computer.NewProcessor(i, o, m)
 
@@ -47,7 +49,6 @@ func part1(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	p.Output.Reset()
 	return strconv.Itoa(p.Output.Read())
 }
 
@@ -64,8 +65,9 @@ func part2(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	i := computer.NewIO([]int{5})
-	o := computer.NewIO(make([]int, 1))
+	i := computer_io.NewTape()
+	i.Set([]int{5})
+	o := computer_io.NewTape()
 
 	p := computer.NewProcessor(i, o, m)
 
@@ -74,6 +76,5 @@ func part2(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	p.Output.Reset()
 	return strconv.Itoa(p.Output.Read())
 }
