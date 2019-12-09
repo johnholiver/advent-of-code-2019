@@ -6,6 +6,7 @@ import (
 	prmt "github.com/gitchander/permutation"
 	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
 	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
+	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"
@@ -82,7 +83,7 @@ func setThrusters(program string, phaseSettings []int) int {
 		i.Set([]int{phaseSetting, input})
 		o := computer_io.NewTape()
 
-		m := computer.NewMemory(program)
+		m := computer_mem.NewMemory(program)
 		p := computer.NewProcessor(i, o, m)
 		p.Process()
 
@@ -97,7 +98,7 @@ func setThrustersInFeedbackLoop(program string, phaseSettings []int) int {
 	for index, phaseSetting := range phaseSettings {
 		i := computer_io.NewTape()
 		i.Set([]int{phaseSetting})
-		m := computer.NewMemory(program)
+		m := computer_mem.NewMemory(program)
 		ps[index] = computer.NewProcessor(i, nil, m)
 		o := computer_io.NewHaltingTape(ps[index])
 		ps[index].Output = o

@@ -3,10 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
+	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
+	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -24,28 +28,50 @@ func main() {
 
 func part1(file *os.File) string {
 	scanner := bufio.NewScanner(file)
+	var program string
 	for scanner.Scan() {
-		//TODO: Massage the input, line by line
-		fmt.Println(scanner.Text())
+		program = scanner.Text()
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	return "implement me"
+	i := computer_io.NewTape()
+	i.Set([]int{1})
+	o := computer_io.NewTape()
+
+	p := computer.NewProcessor(i, o, nil)
+	m := computer_mem.NewRelative(p, program)
+	p.Memory = m
+	p.Process()
+
+	output := p.Output.Read()
+
+	return strconv.Itoa(output)
 }
 
 func part2(file *os.File) string {
 	scanner := bufio.NewScanner(file)
+	var program string
 	for scanner.Scan() {
-		//TODO: Massage the input, line by line
-		fmt.Println(scanner.Text())
+		program = scanner.Text()
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	return "implement me"
+	i := computer_io.NewTape()
+	i.Set([]int{2})
+	o := computer_io.NewTape()
+
+	p := computer.NewProcessor(i, o, nil)
+	m := computer_mem.NewRelative(p, program)
+	p.Memory = m
+	p.Process()
+
+	output := p.Output.Read()
+
+	return strconv.Itoa(output)
 }

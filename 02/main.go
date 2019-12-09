@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
+	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"
@@ -27,11 +28,11 @@ func main() {
 func part1(file *os.File) string {
 	scanner := bufio.NewScanner(file)
 
-	var m *computer.Memory
+	var m *computer_mem.SimpleMemory
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		m = computer.NewMemory(line)
+		m = computer_mem.NewMemory(line)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -49,13 +50,13 @@ func part1(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	return strconv.Itoa(p.Memory.Variables[0])
+	return strconv.Itoa(p.Memory.(*computer_mem.SimpleMemory).Variables[0])
 }
 
 func part2(file *os.File) string {
 	scanner := bufio.NewScanner(file)
 	var line string
-	var m *computer.Memory
+	var m *computer_mem.SimpleMemory
 
 	for scanner.Scan() {
 		line = scanner.Text()
@@ -68,7 +69,7 @@ func part2(file *os.File) string {
 	// Find 19690720
 	for noun := 0; noun <= 99; noun++ {
 		for verb := 0; verb <= 99; verb++ {
-			m = computer.NewMemory(line)
+			m = computer_mem.NewMemory(line)
 
 			m.Variables[1] = noun
 			m.Variables[2] = verb
@@ -79,7 +80,7 @@ func part2(file *os.File) string {
 				log.Fatal(err)
 			}
 
-			if p.Memory.Variables[0] == 19690720 {
+			if p.Memory.(*computer_mem.SimpleMemory).Variables[0] == 19690720 {
 				return strconv.Itoa(100*noun + verb)
 			}
 		}

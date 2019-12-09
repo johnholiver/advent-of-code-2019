@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
 	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
+	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"
@@ -27,11 +28,11 @@ func main() {
 
 func part1(file *os.File) string {
 	scanner := bufio.NewScanner(file)
-	var m *computer.Memory
+	var m *computer_mem.SimpleMemory
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		m = computer.NewMemory(line)
+		m = computer_mem.NewMemory(line)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -54,11 +55,11 @@ func part1(file *os.File) string {
 
 func part2(file *os.File) string {
 	scanner := bufio.NewScanner(file)
-	var m *computer.Memory
+	var m *computer_mem.SimpleMemory
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		m = computer.NewMemory(line)
+		m = computer_mem.NewMemory(line)
 	}
 
 	if err := scanner.Err(); err != nil {

@@ -3,17 +3,19 @@ package computer
 type Processor struct {
 	Input         IO
 	Output        IO
-	Memory        *Memory
+	Memory        Memory
 	PC            int
+	RelativeAddr  int
 	isInterrupted bool
 	IsHalted      bool
 }
 
-func NewProcessor(input IO, output IO, m *Memory) *Processor {
+func NewProcessor(input IO, output IO, m Memory) *Processor {
 	return &Processor{
 		input,
 		output,
 		m,
+		0,
 		0,
 		true,
 		false,
@@ -75,6 +77,9 @@ func (p *Processor) ExecInstruction(instr Instruction) {
 			value = 1
 		}
 		p.Memory.Write(p.PC+3, value, instr.pMode[2])
+	case OpcodeAdjustRelative:
+		op1 := p.Memory.Read(p.PC+1, instr.pMode[0])
+		p.RelativeAddr += op1
 	case OpcodeHalt:
 		p.Halt()
 	}

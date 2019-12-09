@@ -5,15 +5,16 @@ import "strconv"
 type Opcode int
 
 const (
-	OpcodeSum       Opcode = 1
-	OpcodeMultiply  Opcode = 2
-	OpcodeInput     Opcode = 3
-	OpcodeOutput    Opcode = 4
-	OpcodeJumpTrue  Opcode = 5
-	OpcodeJumpFalse Opcode = 6
-	OpcodeLessThen  Opcode = 7
-	OpcodeEqual     Opcode = 8
-	OpcodeHalt      Opcode = 99
+	OpcodeSum            Opcode = 1
+	OpcodeMultiply       Opcode = 2
+	OpcodeInput          Opcode = 3
+	OpcodeOutput         Opcode = 4
+	OpcodeJumpTrue       Opcode = 5
+	OpcodeJumpFalse      Opcode = 6
+	OpcodeLessThen       Opcode = 7
+	OpcodeEqual          Opcode = 8
+	OpcodeAdjustRelative Opcode = 9
+	OpcodeHalt           Opcode = 99
 )
 
 type ParamMode int
@@ -21,6 +22,7 @@ type ParamMode int
 const (
 	Reference ParamMode = iota
 	Value
+	Relative
 )
 
 type Instruction struct {
@@ -61,7 +63,7 @@ func (i Instruction) len() int {
 	switch i.opcode {
 	case OpcodeSum, OpcodeMultiply, OpcodeLessThen, OpcodeEqual:
 		return 4
-	case OpcodeInput, OpcodeOutput:
+	case OpcodeInput, OpcodeOutput, OpcodeAdjustRelative:
 		return 2
 	case OpcodeJumpTrue, OpcodeJumpFalse:
 		return 3
