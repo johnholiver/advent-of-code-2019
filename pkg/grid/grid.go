@@ -7,18 +7,49 @@ type Grid struct {
 }
 
 func NewGrid(w, h int) *Grid {
-	grid := &Grid{
+	g := &Grid{
 		Width:  w,
 		Height: h,
 	}
-	grid.matrix = make(map[int]map[int]*ValuedPoint, h)
-	for j := 0; j < h; j++ {
-		grid.matrix[j] = make(map[int]*ValuedPoint, w)
-		for i := 0; i < w; i++ {
-			grid.matrix[j][i] = NewValuedPoint(i, j, 0)
+	g.matrix = make(map[int]map[int]*ValuedPoint, g.Height)
+	for j := 0; j < g.Height; j++ {
+		g.matrix[j] = make(map[int]*ValuedPoint, g.Width)
+		for i := 0; i < g.Width; i++ {
+			g.matrix[j][i] = NewValuedPoint(i, j, 0)
 		}
 	}
-	return grid
+	return g
+}
+
+func (g *Grid) String() string {
+	gPrint := NewGrid(g.Width, g.Height)
+	g.MirrorY()
+	g.Transform(0, g.Height-1)
+	for j := 0; j < g.Height; j++ {
+		for i := 0; i < g.Width; i++ {
+			vp := g.Get(i, j)
+			gPrint.matrix[vp.Y][vp.X] = vp
+		}
+	}
+	g.Transform(0, -g.Height+1)
+	g.MirrorY()
+
+	gridStr := ""
+	for j := 0; j < gPrint.Height; j++ {
+		line := ""
+		for i := 0; i < gPrint.Width; i++ {
+			switch gPrint.Get(i, j).Value {
+			case 0:
+				line += "."
+			case 1:
+				line += "#"
+			}
+
+		}
+		gridStr += line + "\n"
+	}
+
+	return gridStr
 }
 
 func (g *Grid) Get(x, y int) *ValuedPoint {

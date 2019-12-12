@@ -100,7 +100,7 @@ func setThrustersInFeedbackLoop(program string, phaseSettings []int) int {
 		i.Set([]int{phaseSetting})
 		m := computer_mem.NewMemory(program)
 		ps[index] = computer.NewProcessor(i, nil, m)
-		o := computer_io.NewHaltingTape(ps[index])
+		o := computer_io.NewInterruptingTape(ps[index])
 		ps[index].Output = o
 	}
 

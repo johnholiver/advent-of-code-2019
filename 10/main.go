@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
+	"github.com/johnholiver/advent-of-code-2019/pkg/timer"
 	"log"
 	"math"
 	"sort"
 	"strings"
-	"time"
 )
 
 func main() {
@@ -29,34 +29,35 @@ func main() {
 		log.Fatal(err)
 	}
 
-	prof1 := time.Now()
+	t := timer.New("buildGrid").Start()
 	grid := buildGrid(strings.Join(lines, "\n"))
-	prof2 := time.Now()
-	fmt.Println("Time to build grid: ", prof2.Sub(prof1))
+	fmt.Println(t.Stop())
 
-	start1 := time.Now()
+	tPart1 := timer.New("part1").Start()
 	vp := part1(grid)
-	fmt.Printf("Result part1: %v\n", vp.Value)
-	stop1 := time.Now()
-	fmt.Println("Time to run part1: ", stop1.Sub(start1))
+	fmt.Println(tPart1.Stop())
 
-	fmt.Println(vp)
+	fmt.Printf("Result part1: %v -> %v \n", vp.Point, vp.Value)
 
+	tPart2 := timer.New("part1").Start()
 	elfbet := part2(grid, vp.Point, 200)
-	fmt.Printf("Result part2: %v\n", elfbet.X*100+elfbet.Y)
-	stop2 := time.Now()
+	fmt.Println(tPart2.Stop())
 
-	fmt.Println("Time to run part2: ", stop2.Sub(stop1), "(", stop2.Sub(start1), ")")
+	fmt.Printf("Result part2: %v\n", elfbet.X*100+elfbet.Y)
+
+	t.Name = "all"
+	fmt.Println(t.Stop())
 }
 
 func part1(grid *grid.Grid) *grid.ValuedPoint {
 	//17.156563705s
-	prof1 := time.Now()
+	t := timer.New("lineOfSight").Start()
 	losGrid := lineOfSight(grid)
-	prof2 := time.Now()
-	fmt.Println("Time to build losGrid: ", prof2.Sub(prof1))
+	fmt.Println(t.Stop())
 
+	t = timer.New("biggestLineOfSight").Start()
 	vp := biggestLineOfSight(losGrid)
+	fmt.Println(t.Stop())
 
 	return vp
 }

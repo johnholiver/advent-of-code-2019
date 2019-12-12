@@ -58,3 +58,7 @@ func NewValuedPoint(x, y, value int) *ValuedPoint {
 func (a ValuedPoint) Equals(b ValuedPoint) bool {
 	return a.X == b.X && a.Y == b.Y && a.Value == b.Value
 }
+
+func (p ValuedPoint) String() string {
+	return fmt.Sprintf("(%v,%v|%v)", p.X, p.Y, p.Value)
+}

@@ -7,7 +7,7 @@ type InterruptingTape struct {
 	tape *Tape
 }
 
-func NewHaltingTape(p *computer.Processor) *InterruptingTape {
+func NewInterruptingTape(p *computer.Processor) *InterruptingTape {
 	return &InterruptingTape{
 		p,
 		NewTape(),
@@ -15,6 +15,10 @@ func NewHaltingTape(p *computer.Processor) *InterruptingTape {
 }
 
 var _ computer.IO = &InterruptingTape{}
+
+func (io *InterruptingTape) String() string {
+	return io.tape.String()
+}
 
 func (io *InterruptingTape) Reset() {
 	io.tape.Reset()

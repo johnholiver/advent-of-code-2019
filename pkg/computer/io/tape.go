@@ -1,10 +1,17 @@
 package io
 
-import "github.com/johnholiver/advent-of-code-2019/pkg/computer"
+import (
+	"fmt"
+	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
+)
 
 type Tape struct {
 	values []int
 	cursor int
+}
+
+func (io *Tape) String() string {
+	return fmt.Sprintf("len:%v, c:%v", len(io.values), io.cursor)
 }
 
 func NewTape() *Tape {
