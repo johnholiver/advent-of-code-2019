@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/timer"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -25,9 +26,9 @@ func main() {
 	}
 	defer file.Close()
 
-	//fmt.Printf("Result part1: %v\n", part1(file))
-	//
-	//file.Seek(0, io.SeekStart)
+	fmt.Printf("Result part1: %v\n", part1(file))
+
+	file.Seek(0, io.SeekStart)
 	fmt.Printf("Result part2: %v\n", part2(file))
 }
 
@@ -158,20 +159,109 @@ func part2(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	ticks, _ := findUniverseOrigin(system)
+	ticks, _ := findUniverseOriginFast(system)
 
-	return fmt.Sprintf("%.0f", ticks)
+	return fmt.Sprintf("%v", ticks)
 }
 
-func findUniverseOrigin(system System) (float64, error) {
-	t := timer.New("findUniverseOrigin")
+func findUniverseOriginFast(system System) (int, error) {
+	t := timer.New("findUniverseOriginFast")
 	t.Start()
-	tick := float64(0)
+
+	xStates := make(map[[8]int]bool)
+	yStates := make(map[[8]int]bool)
+	zStates := make(map[[8]int]bool)
+	initialState := system.State()
+	x, y, z := splitState(initialState)
+	xStates[x] = true
+	yStates[y] = true
+	zStates[z] = true
+
+	xFound := false
+	yFound := false
+	zFound := false
+	for {
+		system.Tick()
+
+		state := system.State()
+		x, y, z = splitState(state)
+		//if !xFound {
+		_, xFound = xStates[x]
+		//}
+		//if !yFound {
+		_, yFound = yStates[y]
+		//}
+		//if !zFound {
+		_, zFound = zStates[z]
+		//}
+
+		if xFound && yFound && zFound {
+			break
+		}
+
+		if !xFound {
+			xStates[x] = true
+		}
+		if !yFound {
+			yStates[y] = true
+		}
+		if !zFound {
+			zStates[z] = true
+		}
+	}
+
+	return LCM(len(xStates), len(yStates), len(zStates)), nil
+}
+
+func splitState(initialState [24]int) ([8]int, [8]int, [8]int) {
+	var cState [3][8]int
+	for i := 0; i < 3; i++ {
+		cState[i] = [8]int{
+			initialState[0+i],
+			initialState[3+i],
+			initialState[6+i],
+			initialState[9+i],
+			initialState[12+i],
+			initialState[15+i],
+			initialState[18+i],
+			initialState[21+i],
+		}
+	}
+	return cState[0], cState[1], cState[2]
+}
+
+//https://play.golang.org/p/SmzvkDjYlb
+// greatest common divisor (GCD) via Euclidean algorithm
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+// find Least Common Multiple (LCM) via GCD
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
+}
+
+// NEVER USE THIS! I optimized almost to the best possible scenario, and it would never be able to end
+func findUniverseOriginSlow(system System) (int, error) {
+	t := timer.New("findUniverseOriginSlow")
+	t.Start()
+	tick := 0
 	initialState := system.State()
 	for {
 		if math.Mod(float64(tick), float64(100000000)) == 0 {
 			now := time.Now()
-			fmt.Printf("%v %.0f\n", now, tick)
+			fmt.Printf("%v %v\n", now, tick)
 			//if (t.Elapsed(now).Minutes()>3) {
 			//	return tick, fmt.Errorf("Is taking more than 3 minutes")
 			//}

@@ -92,10 +92,10 @@ func TestSystem_part2_small(t *testing.T) {
 	}
 
 	tmr.Start()
-	tick, _ := findUniverseOrigin(s)
+	tick, _ := findUniverseOriginSlow(s)
 	fmt.Println(tmr.Stop())
 
-	assert.Equal(t, float64(2772), tick)
+	assert.Equal(t, 2772, tick)
 }
 
 //took 15m9.985113186s
@@ -113,10 +113,10 @@ func TestSystem_part2_large(t *testing.T) {
 	}
 
 	tmr.Start()
-	tick, _ := findUniverseOrigin(s)
+	tick, _ := findUniverseOriginSlow(s)
 	fmt.Println(tmr.Stop())
 
-	assert.Equal(t, float64(4686774924), tick)
+	assert.Equal(t, 4686774924, tick)
 }
 
 func Benchmark_part2_small(b *testing.B) {
@@ -132,6 +132,48 @@ func Benchmark_part2_small(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		findUniverseOrigin(s)
+		findUniverseOriginSlow(s)
 	}
+}
+
+// Optimizing
+
+func TestSystem_part2_fast_small(t *testing.T) {
+	tmr := timer.New("part2_small")
+
+	s := System{
+		Objects: []*physics.Object{
+			buildCelestialCorpse("<x=-1, y=0, z=2>"),
+			buildCelestialCorpse("<x=2, y=-10, z=-7>"),
+			buildCelestialCorpse("<x=4, y=-8, z=8>"),
+			buildCelestialCorpse("<x=3, y=5, z=-1>"),
+		},
+		TickCnt: 0,
+	}
+
+	tmr.Start()
+	tick, _ := findUniverseOriginFast(s)
+	fmt.Println(tmr.Stop())
+
+	assert.Equal(t, 2772, tick)
+}
+
+func TestSystem_part2_fast_large(t *testing.T) {
+	tmr := timer.New("1000steps")
+
+	s := System{
+		Objects: []*physics.Object{
+			buildCelestialCorpse("<x=-8, y=-10, z=0>"),
+			buildCelestialCorpse("<x=5, y=5, z=10>"),
+			buildCelestialCorpse("<x=2, y=-7, z=3>"),
+			buildCelestialCorpse("<x=9, y=-8, z=-3>"),
+		},
+		TickCnt: 0,
+	}
+
+	tmr.Start()
+	tick, _ := findUniverseOriginFast(s)
+	fmt.Println(tmr.Stop())
+
+	assert.Equal(t, 4686774924, tick)
 }

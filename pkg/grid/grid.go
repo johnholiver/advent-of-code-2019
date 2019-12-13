@@ -21,7 +21,9 @@ func NewGrid(w, h int) *Grid {
 	return g
 }
 
-func (g *Grid) String() string {
+type GridFormatter func(int) string
+
+func (g *Grid) Print(formatter GridFormatter) string {
 	gPrint := NewGrid(g.Width, g.Height)
 	g.MirrorY()
 	g.Transform(0, g.Height-1)
@@ -38,13 +40,7 @@ func (g *Grid) String() string {
 	for j := 0; j < gPrint.Height; j++ {
 		line := ""
 		for i := 0; i < gPrint.Width; i++ {
-			switch gPrint.Get(i, j).Value {
-			case 0:
-				line += "."
-			case 1:
-				line += "#"
-			}
-
+			line += formatter(gPrint.Get(i, j).Value)
 		}
 		gridStr += line + "\n"
 	}
