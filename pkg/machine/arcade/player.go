@@ -3,11 +3,11 @@ package arcade
 import (
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
+	"github.com/johnholiver/advent-of-code-2019/pkg/machine"
 )
 
 type Player interface {
-	Play() *int
-	SetDebugMode(d bool)
+	machine.AI
 	UpdateBall(p grid.Point)
 	UpdatePaddle(p grid.Point)
 }
@@ -51,7 +51,7 @@ func (ai *ArcadeAI) UpdatePaddle(p grid.Point) {
 	}
 }
 
-func (ai *ArcadeAI) Play() *int {
+func (ai *ArcadeAI) GetNextInput() *int {
 	if !((ai.start && (ai.ballTrackerUpdated && ai.paddleTrackerUpdated)) || (!ai.start && ai.ballTrackerUpdated)) {
 		return nil
 	}

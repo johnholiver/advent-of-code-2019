@@ -113,7 +113,7 @@ func TestSystem_part2_large(t *testing.T) {
 	}
 
 	tmr.Start()
-	tick, _ := findUniverseOriginSlow(s)
+	tick, _ := findUniverseOriginFast(s)
 	fmt.Println(tmr.Stop())
 
 	assert.Equal(t, 4686774924, tick)

@@ -3,10 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/johnholiver/advent-of-code-2019/pkg/input"
+	"github.com/johnholiver/advent-of-code-2019/pkg/machine/robot"
 	"io"
 	"log"
 	"os"
+	"strconv"
+
+	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 )
 
 func main() {
@@ -24,16 +27,26 @@ func main() {
 
 func part1(file *os.File) string {
 	scanner := bufio.NewScanner(file)
+	var program string
 	for scanner.Scan() {
-		//TODO: Massage the input, line by line
-		fmt.Println(scanner.Text())
+		program = scanner.Text()
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	return "implement me"
+	////This robot maps the area
+	//robot := robot.NewMapper(program)
+	//
+	//robot.Exec()
+	//
+	////This robot A-star
+	robot := robot.NewTracker(program)
+
+	robot.Exec()
+
+	return strconv.Itoa(len(robot.Path))
 }
 
 func part2(file *os.File) string {

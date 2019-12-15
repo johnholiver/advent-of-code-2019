@@ -12,6 +12,7 @@ type Arcade struct {
 	originalProgram string
 	p               *computer.Processor
 	g               *grid.Grid
+	player          Player
 	Coins           int
 	Score           int
 	debugMode       bool
@@ -22,6 +23,7 @@ func New(program string) *Arcade {
 		program,
 		nil,
 		grid.NewGrid(36, 21),
+		nil,
 		0,
 		0,
 		false,
@@ -48,63 +50,75 @@ func (a *Arcade) Reset() {
 	a.p = buildComputer(a.originalProgram)
 }
 
-func (a *Arcade) Exec(ai Player) {
+func (a *Arcade) Exec() {
 	for a.p.IsHalted == false {
-		var stepInput *int
-		if a.Coins > 0 {
-			stepInput = ai.Play()
-			if a.debugMode && stepInput != nil {
-				fmt.Println("Input Given:", *stepInput)
-			}
+		a.ExecOneStep()
+	}
+}
+
+func (a *Arcade) ExecOneStep() {
+	var stepInput *int
+	if a.Coins > 0 {
+		stepInput = a.player.GetNextInput()
+		if a.debugMode && stepInput != nil {
+			fmt.Println("Input Given:", *stepInput)
 		}
+	}
 
-		x, y, tile, _ := a.ExecOneStep(stepInput)
+	output, done := a.ProcessOne(stepInput)
+	x := output[0]
+	y := output[1]
+	tile := output[2]
+	if done {
+		return
+	}
 
-		if x == -1 && y == 0 {
-			a.Score = tile
-		} else {
-			a.g.Get(x, y).Value = tile
+	if x == -1 && y == 0 {
+		a.Score = tile
+	} else {
+		a.g.Get(x, y).Value = tile
 
-			switch tile {
-			case 3:
-				ai.UpdatePaddle(*grid.NewPoint(x, y))
-				if a.debugMode {
-					fmt.Print(a.g.Print(arcadeFormatter))
-					fmt.Println("Score:", a.Score)
-				}
-			case 4:
-				ai.UpdateBall(*grid.NewPoint(x, y))
-				if a.debugMode {
-					fmt.Print(a.g.Print(arcadeFormatter))
-					fmt.Println("Score:", a.Score)
-				}
+		switch tile {
+		case 3:
+			a.player.UpdatePaddle(*grid.NewPoint(x, y))
+			if a.debugMode {
+				fmt.Print(a.g.Print(arcadeFormatter))
+				fmt.Println("Score:", a.Score)
+			}
+		case 4:
+			a.player.UpdateBall(*grid.NewPoint(x, y))
+			if a.debugMode {
+				fmt.Print(a.g.Print(arcadeFormatter))
+				fmt.Println("Score:", a.Score)
 			}
 		}
 	}
 }
 
-func (r *Arcade) ExecOneStep(stepInput *int) (int, int, int, bool) {
-	if stepInput != nil {
-		r.p.Input.Append(*stepInput)
+func (a *Arcade) ProcessOne(input *int) ([]int, bool) {
+	output := make([]int, 3)
+	if input != nil {
+		a.p.Input.Append(*input)
 	}
 
-	r.p.Process()
-	if r.p.IsHalted {
+	a.p.Process()
+	if a.p.IsHalted {
 		//Emergency break :D
-		return 0, 0, 0, true
+		return output, true
 	}
 
-	x := r.p.Output.Read()
-	r.p.Process()
-	y := r.p.Output.Read()
-	r.p.Process()
-	tile := r.p.Output.Read()
-	return x, y, tile, false
+	output[0] = a.p.Output.Read()
+	a.p.Process()
+	output[1] = a.p.Output.Read()
+	a.p.Process()
+	output[2] = a.p.Output.Read()
+	return output, false
 }
 
-func (a *Arcade) PutCoin() {
+func (a *Arcade) PutCoin(p Player) {
 	a.Reset()
 	a.Coins++
+	a.player = p
 	a.p.Memory.(*computer_mem.RelativeMemory).Variables[0] = 2
 }
 

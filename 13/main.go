@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/johnholiver/advent-of-code-2019/pkg/arcade"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
+	"github.com/johnholiver/advent-of-code-2019/pkg/machine/arcade"
 )
 
 func main() {
@@ -38,10 +38,12 @@ func part1(file *os.File) string {
 	arc := arcade.New(program)
 
 	blockTiles := 0
-	done := false
-	for done == false {
-		var tile int
-		_, _, tile, done = arc.ExecOneStep(nil)
+	for {
+		output, done := arc.ProcessOne(nil)
+		if done {
+			break
+		}
+		tile := output[2]
 		if tile == 2 {
 			blockTiles++
 		}
@@ -64,8 +66,8 @@ func part2(file *os.File) string {
 	arc := arcade.New(program)
 	player := arcade.NewArcadeAI()
 
-	arc.PutCoin()
-	arc.Exec(player)
+	arc.PutCoin(player)
+	arc.Exec()
 
 	return fmt.Sprintf("%v", arc.Score)
 }

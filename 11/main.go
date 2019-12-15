@@ -3,15 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
-	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
-	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
+	"github.com/johnholiver/advent-of-code-2019/pkg/machine/robot"
 	"log"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func main() {
@@ -38,7 +35,7 @@ func part1(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	robot := NewRobot(program)
+	robot := robot.NewPainter(program)
 
 	robot.Exec()
 
@@ -71,139 +68,6 @@ func containsPoint(s []grid.Point, e grid.Point) bool {
 	return false
 }
 
-type Robot struct {
-	DirectionFacing string
-	Path            []*grid.ValuedPoint
-	p               *computer.Processor
-}
-
-func NewRobot(program string) *Robot {
-	buildComputer := func(program string) *computer.Processor {
-		i := computer_io.NewTape()
-		p := computer.NewProcessor(i, nil, nil)
-		m := computer_mem.NewRelative(p, program)
-		p.Memory = m
-		o := computer_io.NewInterruptingTape(p)
-		p.Output = o
-		return p
-	}
-
-	return &Robot{
-		"U",
-		[]*grid.ValuedPoint{
-			grid.NewValuedPoint(0, 0, 0),
-		},
-		buildComputer(program),
-	}
-}
-
-func (r *Robot) Exec() {
-	cnt := 0
-	for r.p.IsHalted == false {
-		//fmt.Printf("%v%v: ", r.Path[len(r.Path)-1].Point, r.DirectionFacing)
-		r.ExecOneStep(r.processOne)
-		cnt++
-		//fmt.Printf(" %v -> %v%v | %v\n",
-		//	r.Path[len(r.Path)-2],
-		//	r.Path[len(r.Path)-1].Point, r.DirectionFacing,
-		//	r.Path)
-	}
-	//fmt.Println("Robot executed",cnt,"steps")
-
-	//fmt.Printf("Input (Tape: %+v)\n",r.p.Input.(*computer_io.Tape))
-	//fmt.Printf("Output (Tape: %+v)\n",r.p.Output.(*computer_io.InterruptingTape))
-}
-
-func (r *Robot) ExecOneStep(processingFunc func(nextColor int) (int, int, bool)) {
-	lastPosition := r.Path[len(r.Path)-1]
-	nextColor := lastPosition.Value
-
-	//fmt.Printf("%v#", nextColor)
-
-	color, dir, done := processingFunc(nextColor)
-	if done {
-		return
-	}
-
-	//fmt.Printf("%v,%v |", color, dir)
-
-	r.Paint(color)
-	r.Move(dir)
-}
-
-func (r *Robot) processOne(nextColor int) (int, int, bool) {
-	r.p.Input.Append(nextColor)
-	r.p.Process()
-	if r.p.IsHalted {
-		//Emergency break :D
-		return 0, 0, true
-	}
-
-	color := r.p.Output.Read()
-	r.p.Process()
-	dir := r.p.Output.Read()
-	return color, dir, false
-}
-
-func (r *Robot) Paint(color int) {
-	lastPosition := r.Path[len(r.Path)-1]
-	lastPosition.Value = color
-}
-
-func (r *Robot) Move(dir int) int {
-	lastPosition := r.Path[len(r.Path)-1]
-
-	r.DirectionFacing = transformDir(r.DirectionFacing, dir)
-
-	newPoint := grid.NewPoint(lastPosition.X, lastPosition.Y)
-	walker := grid.NewWalker(newPoint, grid.NewVector(r.DirectionFacing, 1))
-	walker.WalkOne()
-
-	color := r.ColorOfPoint(*newPoint)
-	r.Path = append(r.Path, grid.NewValuedPoint(newPoint.X, newPoint.Y, color))
-	return color
-}
-
-func (r *Robot) ColorOfPoint(newPoint grid.Point) int {
-	lP := lastPoint(r.Path, newPoint)
-	if lP != nil {
-		return lP.Value
-	}
-	return 0
-}
-
-func lastPoint(path []*grid.ValuedPoint, nP grid.Point) *grid.ValuedPoint {
-	idx := len(path) - 1
-	for idx > -1 {
-		lP := path[idx]
-		if lP.Point.Equals(nP) {
-			return lP
-		}
-		idx--
-	}
-	return nil
-}
-
-func transformDir(currentFacing string, dir int) string {
-	facing := "URDL"
-	idx := strings.Index(facing, currentFacing)
-
-	switch dir {
-	case 0:
-		idx = idx - 1
-		if idx == -1 {
-			idx = len(facing) - 1
-		}
-	case 1:
-		idx = idx + 1
-		if idx == len(facing) {
-			idx = 0
-		}
-	}
-
-	return string(facing[idx])
-}
-
 func part2(file *os.File) string {
 	scanner := bufio.NewScanner(file)
 	var program string
@@ -215,7 +79,7 @@ func part2(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	robot := NewRobot(program)
+	robot := robot.NewPainter(program)
 	robot.Path[0] = grid.NewValuedPoint(0, 6, 1)
 
 	robot.Exec()
@@ -226,5 +90,15 @@ func part2(file *os.File) string {
 		g.Get(vp.X, vp.Y).Value = vp.Value
 	}
 
-	return "\n" + g.String()
+	return "\n" + g.Print(painterFormatter)
+}
+
+func painterFormatter(e int) string {
+	switch e {
+	case 0:
+		return "."
+	case 1:
+		return "#"
+	}
+	return fmt.Sprintf("%v", e)
 }
