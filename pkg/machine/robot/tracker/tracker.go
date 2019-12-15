@@ -58,11 +58,11 @@ func (r *Tracker) Exec() {
 		}
 
 		if r.debugMode {
-			fmt.Printf("%v: ", r.Path[len(r.Path)-1].Point)
+			fmt.Printf("[%v]%v: ", cnt, r.Path[len(r.Path)-1].Point)
 		}
 		r.ExecOneStep()
 		cnt++
-		if r.debugMode {
+		if r.debugMode && len(r.Path) >= 2 {
 			fmt.Printf(" %v -> %v | %v\n",
 				r.Path[len(r.Path)-2],
 				r.Path[len(r.Path)-1].Point,
@@ -70,7 +70,7 @@ func (r *Tracker) Exec() {
 		}
 	}
 	if r.debugMode {
-		fmt.Println("Robot executed", cnt, "steps")
+		fmt.Println("Robot executed", cnt, "Steps")
 		fmt.Printf("Input (Tape: %+v)\n", r.p.Input.(*computer_io.Tape))
 		fmt.Printf("Output (Tape: %+v)\n", r.p.Output.(*computer_io.InterruptingTape))
 	}
@@ -79,12 +79,19 @@ func (r *Tracker) Exec() {
 func (r *Tracker) ExecOneStep() {
 	var stepInput *int
 
+	if r.ai == nil {
+		if r.debugMode {
+			fmt.Printf("Robot must have an AI")
+		}
+		return
+	}
+
 	stepInput = r.ai.GetNextInput()
 	if r.debugMode && stepInput != nil {
 		fmt.Printf("Step: %v => ", *stepInput)
 	}
 
-	processingFunc := r.processOne
+	processingFunc := r.ProcessOne
 	if r.overrideProcessFunc != nil {
 		processingFunc = r.overrideProcessFunc
 	}
@@ -101,15 +108,18 @@ func (r *Tracker) ExecOneStep() {
 	if r.debugMode {
 		fmt.Println(status)
 	}
+	r.ai.LastOutput(output)
 
-	newPos := r.Move(1)
-	switch status {
-	case 2:
-		newPos.Value = 2
+	if status != 0 {
+		newPos := r.Move(*stepInput)
+		switch status {
+		case 2:
+			newPos.Value = 2
+		}
 	}
 }
 
-func (r *Tracker) processOne(input *int) ([]int, bool) {
+func (r *Tracker) ProcessOne(input *int) ([]int, bool) {
 	output := make([]int, 1)
 	if input != nil {
 		r.p.Input.Append(*input)

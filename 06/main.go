@@ -34,7 +34,7 @@ func part1(file *os.File) string {
 		inputSplit := strings.Split(input, ")")
 		src := inputSplit[0]
 		dst := inputSplit[1]
-		graph.BuildVector(dst, &src)
+		graph.BuildVector(dst, src)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -71,7 +71,7 @@ func part2(file *os.File) string {
 		inputSplit := strings.Split(input, ")")
 		src := inputSplit[0]
 		dst := inputSplit[1]
-		graph.BuildVector(dst, &src)
+		graph.BuildVector(dst, src)
 	}
 
 	if err := scanner.Err(); err != nil {

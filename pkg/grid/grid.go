@@ -1,12 +1,15 @@
 package grid
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/johnholiver/advent-of-code-2019/pkg"
+)
 
 type Grid struct {
 	matrix    map[int]map[int]*ValuedPoint
 	Width     int
 	Height    int
-	formatter GridFormatter
+	formatter pkg.IntFormatter
 }
 
 func NewGrid(w, h int) *Grid {
@@ -25,12 +28,10 @@ func NewGrid(w, h int) *Grid {
 	return g
 }
 
-func (g *Grid) SetFormatter(formatter GridFormatter) *Grid {
+func (g *Grid) SetFormatter(formatter pkg.IntFormatter) *Grid {
 	g.formatter = formatter
 	return g
 }
-
-type GridFormatter func(int) string
 
 func defaultFormatter(e int) string {
 	return fmt.Sprintf("%v", e)
