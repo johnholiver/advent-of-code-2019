@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/johnholiver/advent-of-code-2019/pkg/machine/robot"
+	robot "github.com/johnholiver/advent-of-code-2019/pkg/machine/robot/painter"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

@@ -1,4 +1,4 @@
-package robot
+package painter
 
 import (
 	"fmt"

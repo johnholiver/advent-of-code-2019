@@ -1,9 +1,12 @@
 package grid
 
+import "fmt"
+
 type Grid struct {
-	matrix map[int]map[int]*ValuedPoint
-	Width  int
-	Height int
+	matrix    map[int]map[int]*ValuedPoint
+	Width     int
+	Height    int
+	formatter GridFormatter
 }
 
 func NewGrid(w, h int) *Grid {
@@ -18,12 +21,22 @@ func NewGrid(w, h int) *Grid {
 			g.matrix[j][i] = NewValuedPoint(i, j, 0)
 		}
 	}
+	g.formatter = defaultFormatter
+	return g
+}
+
+func (g *Grid) SetFormatter(formatter GridFormatter) *Grid {
+	g.formatter = formatter
 	return g
 }
 
 type GridFormatter func(int) string
 
-func (g *Grid) Print(formatter GridFormatter) string {
+func defaultFormatter(e int) string {
+	return fmt.Sprintf("%v", e)
+}
+
+func (g *Grid) Print() string {
 	gPrint := NewGrid(g.Width, g.Height)
 	g.MirrorY()
 	g.Transform(0, g.Height-1)
@@ -40,7 +53,7 @@ func (g *Grid) Print(formatter GridFormatter) string {
 	for j := 0; j < gPrint.Height; j++ {
 		line := ""
 		for i := 0; i < gPrint.Width; i++ {
-			line += formatter(gPrint.Get(i, j).Value)
+			line += g.formatter(gPrint.Get(i, j).Value)
 		}
 		gridStr += line + "\n"
 	}

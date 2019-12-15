@@ -6,12 +6,6 @@ import (
 	"github.com/johnholiver/advent-of-code-2019/pkg/machine"
 )
 
-type Player interface {
-	machine.AI
-	UpdateBall(p grid.Point)
-	UpdatePaddle(p grid.Point)
-}
-
 type ArcadeAI struct {
 	ballTracker          grid.Point
 	paddleTracker        grid.Point
@@ -21,7 +15,7 @@ type ArcadeAI struct {
 	debugMode            bool
 }
 
-func NewArcadeAI() *ArcadeAI {
+func NewArcadeAI() machine.AI {
 	return &ArcadeAI{
 		*grid.NewPoint(0, 0),
 		*grid.NewPoint(0, 0),
@@ -34,21 +28,6 @@ func NewArcadeAI() *ArcadeAI {
 
 func (a *ArcadeAI) SetDebugMode(d bool) {
 	a.debugMode = d
-}
-
-func (ai *ArcadeAI) UpdateBall(p grid.Point) {
-	ai.ballTracker = p
-	ai.ballTrackerUpdated = true
-	if ai.debugMode {
-		fmt.Println("Ball Updated:", ai.ballTracker, ai.ballTrackerUpdated, ai.paddleTrackerUpdated)
-	}
-}
-func (ai *ArcadeAI) UpdatePaddle(p grid.Point) {
-	ai.paddleTracker = p
-	ai.paddleTrackerUpdated = true
-	if ai.debugMode {
-		fmt.Println("Paddle Updated:", ai.paddleTracker, ai.ballTrackerUpdated, ai.paddleTrackerUpdated)
-	}
 }
 
 func (ai *ArcadeAI) GetNextInput() *int {
@@ -69,4 +48,32 @@ func (ai *ArcadeAI) GetNextInput() *int {
 	}
 
 	return &input
+}
+
+func (ai *ArcadeAI) LastOutput(output []int) {
+	x := output[0]
+	y := output[1]
+	tile := output[2]
+
+	switch tile {
+	case 3:
+		ai.updatePaddle(*grid.NewPoint(x, y))
+	case 4:
+		ai.updateBall(*grid.NewPoint(x, y))
+	}
+}
+
+func (ai *ArcadeAI) updateBall(p grid.Point) {
+	ai.ballTracker = p
+	ai.ballTrackerUpdated = true
+	if ai.debugMode {
+		fmt.Println("Ball Updated:", ai.ballTracker, ai.ballTrackerUpdated, ai.paddleTrackerUpdated)
+	}
+}
+func (ai *ArcadeAI) updatePaddle(p grid.Point) {
+	ai.paddleTracker = p
+	ai.paddleTrackerUpdated = true
+	if ai.debugMode {
+		fmt.Println("Paddle Updated:", ai.paddleTracker, ai.ballTrackerUpdated, ai.paddleTrackerUpdated)
+	}
 }

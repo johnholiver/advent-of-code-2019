@@ -1,4 +1,4 @@
-package robot
+package tracker
 
 import (
 	"fmt"
@@ -11,10 +11,11 @@ import (
 )
 
 type Tracker struct {
-	p         *computer.Processor
-	Path      []*grid.ValuedPoint
-	ai        machine.AI
-	debugMode bool
+	p                   *computer.Processor
+	Path                []*grid.ValuedPoint
+	ai                  machine.AI
+	overrideProcessFunc machine.ProcessingStepFunc
+	debugMode           bool
 }
 
 func NewTracker(program string) *Tracker {
@@ -34,6 +35,7 @@ func NewTracker(program string) *Tracker {
 			grid.NewValuedPoint(0, 0, 0),
 		},
 		nil,
+		nil,
 		false,
 	}
 }
@@ -42,9 +44,19 @@ func (r *Tracker) SetDebugMode(d bool) {
 	r.debugMode = d
 }
 
+func (r *Tracker) SetAI(ai machine.AI) {
+	r.ai = ai
+}
+
 func (r *Tracker) Exec() {
 	cnt := 0
 	for r.p.IsHalted == false {
+		//Im standing in the objective
+		lastPosition := r.Path[len(r.Path)-1]
+		if lastPosition.Value == 2 {
+			break
+		}
+
 		if r.debugMode {
 			fmt.Printf("%v: ", r.Path[len(r.Path)-1].Point)
 		}
@@ -65,8 +77,36 @@ func (r *Tracker) Exec() {
 }
 
 func (r *Tracker) ExecOneStep() {
-	//HEAVY LOGIC
-	panic("implement me")
+	var stepInput *int
+
+	stepInput = r.ai.GetNextInput()
+	if r.debugMode && stepInput != nil {
+		fmt.Printf("Step: %v => ", *stepInput)
+	}
+
+	processingFunc := r.processOne
+	if r.overrideProcessFunc != nil {
+		processingFunc = r.overrideProcessFunc
+	}
+
+	output, done := processingFunc(stepInput)
+	status := output[0]
+	if done {
+		if r.debugMode {
+			fmt.Println("done")
+		}
+		return
+	}
+
+	if r.debugMode {
+		fmt.Println(status)
+	}
+
+	newPos := r.Move(1)
+	switch status {
+	case 2:
+		newPos.Value = 2
+	}
 }
 
 func (r *Tracker) processOne(input *int) ([]int, bool) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
-	"github.com/johnholiver/advent-of-code-2019/pkg/machine/robot"
+	robot "github.com/johnholiver/advent-of-code-2019/pkg/machine/robot/painter"
 	"log"
 	"os"
 	"strconv"
@@ -84,13 +84,13 @@ func part2(file *os.File) string {
 
 	robot.Exec()
 
-	g := grid.NewGrid(43, 8)
+	g := grid.NewGrid(43, 8).SetFormatter(painterFormatter)
 
 	for _, vp := range robot.Path {
 		g.Get(vp.X, vp.Y).Value = vp.Value
 	}
 
-	return "\n" + g.Print(painterFormatter)
+	return "\n" + g.Print()
 }
 
 func painterFormatter(e int) string {

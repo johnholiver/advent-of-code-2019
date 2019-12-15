@@ -10,5 +10,6 @@ type Machine interface {
 
 type AI interface {
 	GetNextInput() *int
+	LastOutput([]int)
 	SetDebugMode(d bool)
 }

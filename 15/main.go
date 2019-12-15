@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/johnholiver/advent-of-code-2019/pkg/machine/robot"
+	robot "github.com/johnholiver/advent-of-code-2019/pkg/machine/robot/tracker"
 	"io"
 	"log"
 	"os"

@@ -6,13 +6,14 @@ import (
 	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
 	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
+	"github.com/johnholiver/advent-of-code-2019/pkg/machine"
 )
 
 type Arcade struct {
 	originalProgram string
 	p               *computer.Processor
 	g               *grid.Grid
-	player          Player
+	player          machine.AI
 	Coins           int
 	Score           int
 	debugMode       bool
@@ -22,7 +23,7 @@ func New(program string) *Arcade {
 	a := &Arcade{
 		program,
 		nil,
-		grid.NewGrid(36, 21),
+		grid.NewGrid(36, 21).SetFormatter(arcadeFormatter),
 		nil,
 		0,
 		0,
@@ -77,18 +78,14 @@ func (a *Arcade) ExecOneStep() {
 		a.Score = tile
 	} else {
 		a.g.Get(x, y).Value = tile
-
-		switch tile {
-		case 3:
-			a.player.UpdatePaddle(*grid.NewPoint(x, y))
-			if a.debugMode {
-				fmt.Print(a.g.Print(arcadeFormatter))
+		a.player.LastOutput(output)
+		if a.debugMode {
+			switch tile {
+			case 3:
+				fmt.Print(a.g.Print())
 				fmt.Println("Score:", a.Score)
-			}
-		case 4:
-			a.player.UpdateBall(*grid.NewPoint(x, y))
-			if a.debugMode {
-				fmt.Print(a.g.Print(arcadeFormatter))
+			case 4:
+				fmt.Print(a.g.Print())
 				fmt.Println("Score:", a.Score)
 			}
 		}
@@ -115,7 +112,7 @@ func (a *Arcade) ProcessOne(input *int) ([]int, bool) {
 	return output, false
 }
 
-func (a *Arcade) PutCoin(p Player) {
+func (a *Arcade) PutCoin(p machine.AI) {
 	a.Reset()
 	a.Coins++
 	a.player = p
