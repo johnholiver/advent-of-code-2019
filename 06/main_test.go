@@ -48,7 +48,7 @@ func graphBuilder(input string) *graph.Graph {
 		inputSplit := strings.Split(input, ")")
 		src := inputSplit[0]
 		dst := inputSplit[1]
-		graph.BuildVector(dst, &src)
+		graph.BuildVector(dst, src)
 	}
 	return graph
 }

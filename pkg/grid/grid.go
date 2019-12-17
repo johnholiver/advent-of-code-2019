@@ -39,16 +39,12 @@ func defaultFormatter(e int) string {
 
 func (g *Grid) Print() string {
 	gPrint := NewGrid(g.Width, g.Height)
-	g.MirrorY()
-	g.Transform(0, g.Height-1)
 	for j := 0; j < g.Height; j++ {
 		for i := 0; i < g.Width; i++ {
 			vp := g.Get(i, j)
 			gPrint.matrix[vp.Y][vp.X] = vp
 		}
 	}
-	g.Transform(0, -g.Height+1)
-	g.MirrorY()
 
 	gridStr := ""
 	for j := 0; j < gPrint.Height; j++ {

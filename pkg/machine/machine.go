@@ -13,3 +13,18 @@ type AI interface {
 	LastOutput([]int)
 	SetDebugMode(d bool)
 }
+
+type NoopAi struct{}
+
+func NewNoopAI() AI {
+	return &NoopAi{}
+}
+func (ai *NoopAi) GetNextInput() *int {
+	return nil
+}
+func (ai *NoopAi) LastOutput(o []int) {
+	return
+}
+func (ai *NoopAi) SetDebugMode(d bool) {
+	return
+}

@@ -22,6 +22,14 @@ func (a Point) Equals(b Point) bool {
 	return a.X == b.X && a.Y == b.Y
 }
 
+func (a *Point) Plus(b *Point) *Point {
+	return NewPoint(a.X+b.X, a.Y+b.Y)
+}
+
+func (a *Point) Minus(b *Point) *Point {
+	return NewPoint(a.X-b.X, a.Y-b.Y)
+}
+
 func (p *Point) Transform(x, y int) {
 	p.X += x
 	p.Y += y

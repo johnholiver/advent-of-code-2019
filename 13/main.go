@@ -64,6 +64,7 @@ func part2(file *os.File) string {
 	}
 
 	arc := arcade.New(program)
+	arc.SetDebugMode(true)
 	player := arcade.NewArcadeAI()
 
 	arc.PutCoin(player)
