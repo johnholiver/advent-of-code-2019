@@ -31,12 +31,13 @@ func NewProgrammerAI(program string) machine.AI {
 	return ai
 }
 
-func (ai *Programmer) SetDebugMode(d bool) {
-	ai.debugMode = d
+func (Programmer) asciiFormatter(e interface{}) string {
+	cast := e.(int)
+	return string(rune(cast))
 }
 
-func (ai *Programmer) asciiFormatter(e int) string {
-	return string(rune(e))
+func (ai *Programmer) SetDebugMode(d bool) {
+	ai.debugMode = d
 }
 
 func (ai *Programmer) programToInput(command string) []int {

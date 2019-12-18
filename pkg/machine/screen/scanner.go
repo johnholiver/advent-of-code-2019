@@ -28,12 +28,13 @@ func NewScannerAI() machine.AI {
 	return ai
 }
 
-func (ai *ScannerAI) SetDebugMode(d bool) {
-	ai.debugMode = d
+func (ScannerAI) asciiFormatter(e interface{}) string {
+	cast := e.(int)
+	return string(rune(cast))
 }
 
-func (ai *ScannerAI) asciiFormatter(e int) string {
-	return string(rune(e))
+func (ai *ScannerAI) SetDebugMode(d bool) {
+	ai.debugMode = d
 }
 
 func (ai *ScannerAI) GetNextInput() *int {

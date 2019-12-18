@@ -93,8 +93,9 @@ func part2(file *os.File) string {
 	return "\n" + g.Print()
 }
 
-func painterFormatter(e int) string {
-	switch e {
+func painterFormatter(e interface{}) string {
+	cast := e.(int)
+	switch cast {
 	case 0:
 		return "."
 	case 1:

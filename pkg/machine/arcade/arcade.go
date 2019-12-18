@@ -119,8 +119,9 @@ func (a *Arcade) PutCoin(p machine.AI) {
 	a.p.Memory.(*computer_mem.RelativeMemory).Variables[0] = 2
 }
 
-func arcadeFormatter(e int) string {
-	switch e {
+func arcadeFormatter(e interface{}) string {
+	cast := e.(int)
+	switch cast {
 	case 0:
 		return "."
 	case 1:

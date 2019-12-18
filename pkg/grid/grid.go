@@ -9,7 +9,7 @@ type Grid struct {
 	matrix    map[int]map[int]*ValuedPoint
 	Width     int
 	Height    int
-	formatter pkg.IntFormatter
+	formatter pkg.InterfaceFormatter
 }
 
 func NewGrid(w, h int) *Grid {
@@ -24,17 +24,18 @@ func NewGrid(w, h int) *Grid {
 			g.matrix[j][i] = NewValuedPoint(i, j, 0)
 		}
 	}
-	g.formatter = defaultFormatter
+	g.formatter = gridDefaultFormatter
 	return g
 }
 
-func (g *Grid) SetFormatter(formatter pkg.IntFormatter) *Grid {
+func (g *Grid) SetFormatter(formatter pkg.InterfaceFormatter) *Grid {
 	g.formatter = formatter
 	return g
 }
 
-func defaultFormatter(e int) string {
-	return fmt.Sprintf("%v", e)
+func gridDefaultFormatter(e interface{}) string {
+	cast := e.(int)
+	return fmt.Sprintf("%v", cast)
 }
 
 func (g *Grid) Print() string {

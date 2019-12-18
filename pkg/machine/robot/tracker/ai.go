@@ -51,8 +51,9 @@ func (ai *MapperAI) SetDebugMode(d bool) {
 	ai.debugMode = d
 }
 
-func (ai *MapperAI) mapperFormatter(e int) string {
-	switch e {
+func (ai *MapperAI) mapperFormatter(e interface{}) string {
+	cast := e.(int)
+	switch cast {
 	case 0:
 		return "?"
 	case 1:

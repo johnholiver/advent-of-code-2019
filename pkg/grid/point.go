@@ -53,10 +53,10 @@ func (p Point) Distance(p2 Point) float64 {
 
 type ValuedPoint struct {
 	*Point
-	Value int
+	Value interface{}
 }
 
-func NewValuedPoint(x, y, value int) *ValuedPoint {
+func NewValuedPoint(x, y int, value interface{}) *ValuedPoint {
 	return &ValuedPoint{
 		NewPoint(x, y),
 		value,

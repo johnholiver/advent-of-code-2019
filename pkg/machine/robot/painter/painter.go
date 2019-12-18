@@ -68,7 +68,7 @@ func (r *Painter) Exec() {
 
 func (r *Painter) ExecOneStep() {
 	lastPosition := r.Path[len(r.Path)-1]
-	nextColor := lastPosition.Value
+	nextColor := lastPosition.Value.(int)
 
 	if r.debugMode {
 		fmt.Printf("%v#", nextColor)
@@ -132,7 +132,7 @@ func (r *Painter) Move(dir int) *grid.ValuedPoint {
 func (r *Painter) ColorOfPoint(newPoint grid.Point) int {
 	lP := lastPoint(r.Path, newPoint)
 	if lP != nil {
-		return lP.Value
+		return lP.Value.(int)
 	}
 	return 0
 }

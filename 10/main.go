@@ -225,7 +225,7 @@ func biggestLineOfSight(g *grid.Grid) *grid.ValuedPoint {
 	for j := 0; j < g.Width; j++ {
 		for i := 0; i < g.Height; i++ {
 			gvp := g.Get(i, j)
-			if vp == nil || vp.Value < gvp.Value {
+			if vp == nil || vp.Value.(int) < gvp.Value.(int) {
 				vp = gvp
 			}
 		}
