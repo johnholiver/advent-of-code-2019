@@ -90,7 +90,7 @@ func part2(file *os.File) string {
 		g.Get(vp.X, vp.Y).Value = vp.Value
 	}
 
-	return "\n" + g.Print()
+	return "\n" + g.String()
 }
 
 func painterFormatter(e interface{}) string {

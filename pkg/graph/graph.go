@@ -25,6 +25,18 @@ func defaultFormatter(e interface{}) string {
 	return e.(string)
 }
 
+func (g *Graph) String() string {
+	s := ""
+	for _, rootNode := range g.Roots {
+		s += rootNode.String()
+	}
+	return s
+}
+
+func (g *Graph) FindNode(value interface{}) *Node {
+	return g.NodeMap[value]
+}
+
 func (g *Graph) BuildVector(value interface{}, parentValue interface{}) *Node {
 	var parentNode *Node
 	if parentValue != nil {
@@ -52,12 +64,16 @@ func (g *Graph) BuildVector(value interface{}, parentValue interface{}) *Node {
 	return currentNode
 }
 
-func (g *Graph) FindNode(value interface{}) *Node {
-	return g.NodeMap[value]
-}
+func (g *Graph) BuildBranch(value interface{}, parentNode *Node) *Node {
+	currentNode := NewNode(value)
+	currentNode.SetFormatter(g.formatter)
 
-func (g *Graph) Print() {
-	for _, rootNode := range g.Roots {
-		rootNode.Print()
+	if parentNode == nil {
+		g.Roots[value] = currentNode
 	}
+	if parentNode != nil {
+		parentNode.AddChild(currentNode)
+	}
+
+	return currentNode
 }

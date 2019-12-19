@@ -208,7 +208,7 @@ func (ai *MapperAI) LastOutput(output []int) {
 	}
 
 	if ai.debugMode {
-		fmt.Print(ai.Map.Print())
+		fmt.Print(ai.Map)
 		fmt.Printf("Steps: [%v][%v][%v]\n", ai.Steps, ai.HighestSteps, ai.totalSteps)
 		if status == 2 {
 			fmt.Printf("X: %v %v/%v\n", nextPos, ai.Steps, ai.HighestSteps)

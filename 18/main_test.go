@@ -1,24 +1,31 @@
 package main
 
 import (
+	"fmt"
+	"github.com/johnholiver/advent-of-code-2019/18/astar"
+	"github.com/stretchr/testify/assert"
+	"reflect"
 	"testing"
 )
 
 var maze1 = `#########
 #b.A.@.a#
-#########`
+#########
+`
 
 var maze2 = `########################
 #f.D.E.e.C.b.A.@.a.B.c.#
 ######################.#
 #d.....................#
-########################`
+########################
+`
 
 var maze3 = `########################
 #...............b.C.D.f#
 #.######################
 #.....@.a.B.c.d.A.e.F.g#
-########################`
+########################
+`
 
 var maze4 = `#################
 #i.G..c...e..H.p#
@@ -28,14 +35,16 @@ var maze4 = `#################
 #k.E..a...g..B.n#
 ########.########
 #l.F..d...h..C.m#
-#################`
+#################
+`
 
 var maze5 = `########################
 #@..............ac.GI.b#
 ###d#e#f################
 ###A#B#C################
 ###g#h#i################
-########################`
+########################
+`
 
 var maze_input = `#################################################################################
 #.........#..............p..#.....#.....#....l#...........#.....#.........#.....#
@@ -117,7 +126,8 @@ var maze_input = `##############################################################
 #...#.........#...#.#.....#.#..w....#...#...#.....#s..#.....#.#.#...#.#.#...#.#.#
 ###.#####.###.###.###.###.#.#########.#####.#.###.###.#######.#.#.#.#.#.#.#.#Y#.#
 #.G.......#.....#.......#...#...........#q....#.....#...N.....#...#...#...#.....#
-#################################################################################`
+#################################################################################
+`
 
 //func Test_part1(t *testing.T) {
 //	r := algo(maze1)
@@ -163,7 +173,7 @@ func Test_fetchKeys(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1 := fetchKeys(buildGrid(tt.args.input))
+			_, got, got1 := fetchKeys(buildGrid(tt.args.input))
 			if len(got) != tt.want {
 				t.Errorf("fetchKeys() got = %v, want %v", len(got), tt.want)
 			}
@@ -192,8 +202,71 @@ func Test_buildGrid(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := buildGrid(tt.args.input); got.Print() == tt.want {
+			if got := buildGrid(tt.args.input).String(); got != tt.want {
 				t.Errorf("buildGrid() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_AStar(t *testing.T) {
+	g := buildGrid(maze1)
+	at, k, _ := fetchKeys(g)
+
+	kPlusAt := append(k, at)
+
+	paths := astar.NewAllPaths(kPlusAt)
+
+	assert.Equal(t, float64(2), paths['@']['a'].Distance)
+	assert.Len(t, paths['@']['a'].Dependencies, 0)
+	assert.Equal(t, float64(4), paths['@']['b'].Distance)
+	assert.Equal(t, []rune{'a'}, paths['@']['b'].Dependencies)
+	assert.Equal(t, float64(6), paths['a']['b'].Distance)
+	assert.Equal(t, []rune{'a'}, paths['a']['b'].Dependencies)
+}
+
+func Test_DependencyGraph(t *testing.T) {
+	g := buildGrid(maze2)
+	at, ks, _ := fetchKeys(g)
+
+	ksPlusAt := append(ks, at)
+
+	paths := astar.NewAllPaths(ksPlusAt)
+
+	depTree := buildDependencyTree(at, ks, paths)
+	fmt.Println(depTree)
+}
+
+func Test_leastCostyPath(t *testing.T) {
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  int
+		want1 []rune
+	}{
+		//{"1", args{maze1}, 8,[]rune{'@','a','b'}},
+		//{"2", args{maze2}, 86,[]rune{'@','a','b','c','d','e','f'}},
+		//{"3", args{maze3}, 132, []rune{'@','b', 'a', 'c', 'd', 'f', 'e', 'g'}},
+		{"4", args{maze4}, 136, []rune{'@', 'a', 'f', 'b', 'j', 'g', 'n', 'h', 'd', 'l', 'o', 'e', 'p', 'c', 'i', 'k', 'm'}},
+		//{"5", args{maze5}, 81, []rune{'a','c','f','i','d','g','b','e','h'}},
+		//{"input", args{maze_input}, maze_input},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := buildGrid(tt.args.input)
+			at, ks, _ := fetchKeys(g)
+			ksPlusAt := append(ks, at)
+			paths := astar.NewAllPaths(ksPlusAt)
+			depTree := buildDependencyTree(at, ks, paths)
+			p, c := leastCostyPath(paths, depTree.Roots[at.Kind])
+			if c != tt.want {
+				t.Errorf("fetchKeys() got = %v, want %v", c, tt.want)
+			}
+			if !reflect.DeepEqual(p, tt.want1) {
+				t.Errorf("fetchKeys() got1 = %v, want %v", p, tt.want1)
 			}
 		})
 	}

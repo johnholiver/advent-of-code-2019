@@ -31,9 +31,11 @@ func (n *Node) AddChild(c *Node) {
 	n.Children = append(n.Children, c)
 }
 
-func (n *Node) Print() {
-	fmt.Printf("%v", n.formatter(n.Value))
+func (n *Node) String() string {
+	s := ""
+	s += fmt.Sprintf("%v", n.formatter(n.Value))
 	for _, c := range n.Children {
-		c.Print()
+		s += c.String()
 	}
+	return s
 }

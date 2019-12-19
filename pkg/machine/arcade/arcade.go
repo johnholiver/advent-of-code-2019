@@ -82,10 +82,10 @@ func (a *Arcade) ExecOneStep() {
 		if a.debugMode {
 			switch tile {
 			case 3:
-				fmt.Print(a.g.Print())
+				fmt.Print(a.g)
 				fmt.Println("Score:", a.Score)
 			case 4:
-				fmt.Print(a.g.Print())
+				fmt.Print(a.g)
 				fmt.Println("Score:", a.Score)
 			}
 		}

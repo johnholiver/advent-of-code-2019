@@ -38,7 +38,7 @@ func gridDefaultFormatter(e interface{}) string {
 	return fmt.Sprintf("%v", cast)
 }
 
-func (g *Grid) Print() string {
+func (g *Grid) String() string {
 	gPrint := NewGrid(g.Width, g.Height)
 	for j := 0; j < g.Height; j++ {
 		for i := 0; i < g.Width; i++ {

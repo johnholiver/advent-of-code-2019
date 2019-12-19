@@ -1,6 +1,7 @@
 package astar
 
 import (
+	"fmt"
 	"github.com/beefsack/go-astar"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 )
@@ -13,6 +14,10 @@ type Tile struct {
 	X, Y int
 	// W is a reference to the World that the tile is a part of.
 	W *grid.Grid
+}
+
+func (t *Tile) String() string {
+	return fmt.Sprintf("%c(%v,%v)", t.Kind, t.X, t.Y)
 }
 
 // PathNeighbors returns the neighbors of the tile, excluding blockers and
@@ -38,7 +43,7 @@ func (t *Tile) PathNeighborCost(to astar.Pather) float64 {
 	return 1
 }
 
-// PathEstimatedCost uses Manhattan distance to estimate orthogonal distance
+// PathEstimatedCost uses Manhattan Distance to estimate orthogonal Distance
 // between non-adjacent nodes.
 func (t *Tile) PathEstimatedCost(to astar.Pather) float64 {
 	toT := to.(*Tile)

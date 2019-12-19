@@ -71,6 +71,6 @@ func (ai *Programmer) LastOutput(output []int) {
 	ai.botPos.X++
 
 	if ai.debugMode {
-		fmt.Println(ai.Map.Print())
+		fmt.Println(ai.Map)
 	}
 }

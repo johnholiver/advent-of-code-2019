@@ -55,7 +55,7 @@ func (ai *ScannerAI) LastOutput(output []int) {
 	ai.botPos.X++
 
 	if ai.debugMode {
-		fmt.Println(ai.Map.Print())
+		fmt.Println(ai.Map)
 	}
 
 }
