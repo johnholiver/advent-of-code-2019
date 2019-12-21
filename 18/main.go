@@ -3,7 +3,8 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/johnholiver/advent-of-code-2019/18/astar"
+	"github.com/johnholiver/advent-of-code-2019/18/pathfinder"
+	"github.com/johnholiver/advent-of-code-2019/pkg/astar"
 	"github.com/johnholiver/advent-of-code-2019/pkg/graph"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
@@ -40,10 +41,10 @@ func part1(file *os.File) string {
 	at, ks, _ := fetchKeys(buildGrid(input))
 	kPlusAt := append(ks, at)
 
-	paths := astar.NewAllPaths(kPlusAt)
+	paths := pathfinder.NewAllPaths(kPlusAt)
 
-	depTree := buildDependencyTree(at, ks, paths)
-	_, c := leastCostyPath(paths, depTree.Roots[at.Kind])
+	_, root := buildDependencyTree(at, ks, paths)
+	_, c := leastCostyPath(paths, root)
 
 	return fmt.Sprint(c)
 }
@@ -86,18 +87,14 @@ func buildGrid(input string) *grid.Grid {
 			y++
 			continue
 		}
-		g.Get(x, y).Value = &astar.Tile{c, x, y, g}
+		g.Get(x, y).Value = &astar.Tile{pathfinder.MazeTileKind{c}, x, y, g}
 		x++
 	}
 	return g
 }
 
-func asciiFormatter(e interface{}) string {
-	return string(e.(rune))
-}
-
 func tileFormatter(e interface{}) string {
-	return string(e.(*astar.Tile).Kind)
+	return e.(*astar.Tile).Kind.(pathfinder.MazeTileKind).String()
 }
 
 func fetchKeys(g *grid.Grid) (*astar.Tile, []*astar.Tile, []*astar.Tile) {
@@ -108,7 +105,7 @@ func fetchKeys(g *grid.Grid) (*astar.Tile, []*astar.Tile, []*astar.Tile) {
 	for y := 0; y < g.Height; y++ {
 		for x := 0; x < g.Width; x++ {
 			vp := g.Get(x, y)
-			c := vp.Value.(*astar.Tile).Kind
+			c := vp.Value.(*astar.Tile).Kind.(pathfinder.MazeTileKind).Value
 			if c == '@' {
 				at = vp.Value.(*astar.Tile)
 			}
@@ -124,20 +121,39 @@ func fetchKeys(g *grid.Grid) (*astar.Tile, []*astar.Tile, []*astar.Tile) {
 	return at, keys, doors
 }
 
-func buildDependencyTree(at *astar.Tile, ks []*astar.Tile, paths astar.AllPaths) *graph.Graph {
-	depGraph := graph.NewGraph()
-	depGraph.SetFormatter(asciiFormatter)
-	atN := depGraph.BuildBranch(at.Kind, nil)
-	leftKs := make([]rune, len(ks))
-	for i, k := range ks {
-		leftKs[i] = k.Kind
-	}
-	level := 1
-	recursiveAddTreeBranch(paths, depGraph, leftKs, atN, level)
-	return depGraph
+type DependencyNode struct {
+	Value   rune
+	MinCost int
 }
 
-func recursiveAddTreeBranch(paths astar.AllPaths, depGraph *graph.Graph, leftK []rune, parent *graph.Node, level int) {
+func NewDependencyNode(c rune) *DependencyNode {
+	return &DependencyNode{
+		c,
+		int(^uint(0) >> 1),
+	}
+}
+
+func (n *DependencyNode) String() string {
+	return fmt.Sprintf("%c", n.Value)
+}
+
+func depTreeFormatter(e interface{}) string {
+	return e.(*DependencyNode).String()
+}
+
+func buildDependencyTree(at *astar.Tile, ks []*astar.Tile, paths pathfinder.AllPaths) (*graph.Graph, *graph.Node) {
+	depGraph := graph.NewGraph()
+	depGraph.SetFormatter(depTreeFormatter)
+	atN := depGraph.BuildBranch(NewDependencyNode(at.Kind.(pathfinder.MazeTileKind).Value), nil)
+	leftKs := make([]rune, len(ks))
+	for i, k := range ks {
+		leftKs[i] = k.Kind.(pathfinder.MazeTileKind).Value
+	}
+	recursiveAddTreeBranch(paths, depGraph, leftKs, atN, atN.Value.(*DependencyNode).MinCost)
+	return depGraph, atN
+}
+
+func recursiveAddTreeBranch(paths pathfinder.AllPaths, depGraph *graph.Graph, leftK []rune, parent *graph.Node, maxCost int) int {
 	indexOf := func(slice []rune, val rune) (int, bool) {
 		for i, item := range slice {
 			if item == val {
@@ -147,27 +163,59 @@ func recursiveAddTreeBranch(paths astar.AllPaths, depGraph *graph.Graph, leftK [
 		return -1, false
 	}
 
+	if len(leftK) == 0 {
+		parent.Value.(*DependencyNode).MinCost = 0
+		return 0
+	}
+
+	var nodeMinPath *graph.Node
+	costCap := maxCost
+
 	for iK, k := range leftK {
 		dependsOnK := false
-		for _, dep := range paths[k][parent.Value.(rune)].Dependencies {
+		for _, dep := range paths[k][parent.Value.(*DependencyNode).Value].Dependencies {
 			if _, dependsOnK = indexOf(leftK, dep); dependsOnK {
 				break
 			}
 		}
 		if !dependsOnK {
-			//fmt.Printf("%v: Down [%c->%c] - leftover: %c\n",level, parent.Value.(rune),k, leftK)
-			kN := depGraph.BuildBranch(k, parent)
+			//this is one possible branch
+			kN := graph.NewNode(NewDependencyNode(k))
+			kN.SetFormatter(depTreeFormatter)
+
+			//up cost
+			branchCost := int(paths[parent.Value.(*DependencyNode).Value][kN.Value.(*DependencyNode).Value].Distance)
+			if branchCost > maxCost {
+				return int(^uint(0) >> 1)
+			}
+
+			//fmt.Printf("%v: Down [%c->%c] - leftover: %c\n",maxCost, parent.Value.(rune),k, leftK)
 			notKs := append(make([]rune, 0), leftK[:iK]...)
 			notKs = append(notKs, leftK[iK+1:]...)
-			recursiveAddTreeBranch(paths, depGraph, notKs, kN, level+1)
-			//fmt.Printf("%v: Up [%c->%c] - leftover: %c\n",level, parent.Value.(rune),k, leftK)
+
+			//down cost
+			if nodeMinPath != nil {
+				costCap = maxCost - nodeMinPath.Value.(*DependencyNode).MinCost
+			}
+			branchCost += recursiveAddTreeBranch(paths, depGraph, notKs, kN, costCap)
+			//fmt.Printf("%v: Up [%c->%c] - leftover: %c\n",maxCost, parent.Value.(rune),k, leftK)
+
+			if nodeMinPath == nil ||
+				branchCost < nodeMinPath.Value.(*DependencyNode).MinCost {
+				kN.Value.(*DependencyNode).MinCost = branchCost
+				nodeMinPath = kN
+			}
 		}
 	}
+
+	parent.AddChild(nodeMinPath)
+	parent.Value.(*DependencyNode).MinCost = nodeMinPath.Value.(*DependencyNode).MinCost
+	return parent.Value.(*DependencyNode).MinCost
 }
 
-func leastCostyPath(paths astar.AllPaths, parent *graph.Node) ([]rune, int) {
+func leastCostyPath(paths pathfinder.AllPaths, parent *graph.Node) ([]rune, int) {
 	if len(parent.Children) == 0 {
-		return []rune{parent.Value.(rune)}, 0
+		return []rune{parent.Value.(*DependencyNode).Value}, 0
 	}
 	var lcPath []rune
 	lcCost := int(^uint(0) >> 1)
@@ -178,7 +226,7 @@ func leastCostyPath(paths astar.AllPaths, parent *graph.Node) ([]rune, int) {
 			lcCost = c
 		}
 	}
-	newLcCost := lcCost + int(paths[parent.Value.(rune)][lcPath[0]].Distance)
-	newLcPath := append([]rune{parent.Value.(rune)}, lcPath...)
+	newLcCost := lcCost + int(paths[parent.Value.(*DependencyNode).Value][lcPath[0]].Distance)
+	newLcPath := append([]rune{parent.Value.(*DependencyNode).Value}, lcPath...)
 	return newLcPath, newLcCost
 }

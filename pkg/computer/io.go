@@ -4,6 +4,7 @@ type IO interface {
 	Reset()
 	Previous()
 	Next()
+	CanRead() bool
 	Read() int
 	ReadAt(index int) int
 	Set(values []int)

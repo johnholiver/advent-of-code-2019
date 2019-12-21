@@ -39,19 +39,11 @@ func gridDefaultFormatter(e interface{}) string {
 }
 
 func (g *Grid) String() string {
-	gPrint := NewGrid(g.Width, g.Height)
-	for j := 0; j < g.Height; j++ {
-		for i := 0; i < g.Width; i++ {
-			vp := g.Get(i, j)
-			gPrint.matrix[vp.Y][vp.X] = vp
-		}
-	}
-
 	gridStr := ""
-	for j := 0; j < gPrint.Height; j++ {
+	for j := 0; j < g.Height; j++ {
 		line := ""
-		for i := 0; i < gPrint.Width; i++ {
-			line += g.formatter(gPrint.Get(i, j).Value)
+		for i := 0; i < g.Width; i++ {
+			line += g.formatter(g.Get(i, j).Value)
 		}
 		gridStr += line + "\n"
 	}

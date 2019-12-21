@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/johnholiver/advent-of-code-2019/18/astar"
+	"github.com/johnholiver/advent-of-code-2019/18/pathfinder"
 	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
@@ -215,7 +215,7 @@ func Test_AStar(t *testing.T) {
 
 	kPlusAt := append(k, at)
 
-	paths := astar.NewAllPaths(kPlusAt)
+	paths := pathfinder.NewAllPaths(kPlusAt)
 
 	assert.Equal(t, float64(2), paths['@']['a'].Distance)
 	assert.Len(t, paths['@']['a'].Dependencies, 0)
@@ -231,9 +231,9 @@ func Test_DependencyGraph(t *testing.T) {
 
 	ksPlusAt := append(ks, at)
 
-	paths := astar.NewAllPaths(ksPlusAt)
+	paths := pathfinder.NewAllPaths(ksPlusAt)
 
-	depTree := buildDependencyTree(at, ks, paths)
+	depTree, _ := buildDependencyTree(at, ks, paths)
 	fmt.Println(depTree)
 }
 
@@ -251,7 +251,7 @@ func Test_leastCostyPath(t *testing.T) {
 		//{"2", args{maze2}, 86,[]rune{'@','a','b','c','d','e','f'}},
 		//{"3", args{maze3}, 132, []rune{'@','b', 'a', 'c', 'd', 'f', 'e', 'g'}},
 		{"4", args{maze4}, 136, []rune{'@', 'a', 'f', 'b', 'j', 'g', 'n', 'h', 'd', 'l', 'o', 'e', 'p', 'c', 'i', 'k', 'm'}},
-		//{"5", args{maze5}, 81, []rune{'a','c','f','i','d','g','b','e','h'}},
+		//{"5", args{maze5}, 81, []rune{'@','a','c','f','i','d','g','b','e','h'}},
 		//{"input", args{maze_input}, maze_input},
 	}
 	for _, tt := range tests {
@@ -259,9 +259,9 @@ func Test_leastCostyPath(t *testing.T) {
 			g := buildGrid(tt.args.input)
 			at, ks, _ := fetchKeys(g)
 			ksPlusAt := append(ks, at)
-			paths := astar.NewAllPaths(ksPlusAt)
-			depTree := buildDependencyTree(at, ks, paths)
-			p, c := leastCostyPath(paths, depTree.Roots[at.Kind])
+			paths := pathfinder.NewAllPaths(ksPlusAt)
+			_, root := buildDependencyTree(at, ks, paths)
+			p, c := leastCostyPath(paths, root)
 			if c != tt.want {
 				t.Errorf("fetchKeys() got = %v, want %v", c, tt.want)
 			}

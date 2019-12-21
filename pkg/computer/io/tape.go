@@ -36,6 +36,10 @@ func (io *Tape) Next() {
 	io.cursor++
 }
 
+func (io *Tape) CanRead() bool {
+	return io.cursor < len(io.values)
+}
+
 //Read operations
 func (io *Tape) Read() int {
 	value := io.values[io.cursor]

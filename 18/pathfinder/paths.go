@@ -1,8 +1,9 @@
-package astar
+package pathfinder
 
 import (
 	"fmt"
 	goastar "github.com/beefsack/go-astar"
+	"github.com/johnholiver/advent-of-code-2019/pkg/astar"
 	"unicode"
 )
 
@@ -23,18 +24,18 @@ func (pp AllPaths) String() string {
 	return s
 }
 
-func NewAllPaths(kPlusAt []*Tile) AllPaths {
-	paths := make(AllPaths, len(kPlusAt))
+func NewAllPaths(tiles []*astar.Tile) AllPaths {
+	paths := make(AllPaths, len(tiles))
 
-	for i := 0; i < len(kPlusAt); i++ {
-		tile := kPlusAt[i]
-		paths[tile.Kind] = make(map[rune]*OnePath, len(kPlusAt)-1)
+	for i := 0; i < len(tiles); i++ {
+		tile := tiles[i]
+		paths[tile.Kind.(MazeTileKind).Value] = make(map[rune]*OnePath, len(tiles)-1)
 	}
 
-	for i := 0; i < len(kPlusAt); i++ {
-		tileFrom := kPlusAt[i]
-		for j := i + 1; j < len(kPlusAt); j++ {
-			tileTo := kPlusAt[j]
+	for i := 0; i < len(tiles); i++ {
+		tileFrom := tiles[i]
+		for j := i + 1; j < len(tiles); j++ {
+			tileTo := tiles[j]
 			p, dist, found := goastar.Path(tileFrom, tileTo)
 			if !found {
 				panic("AHHH!")
@@ -42,8 +43,8 @@ func NewAllPaths(kPlusAt []*Tile) AllPaths {
 
 			pathResult := &OnePath{p, dist, calculateDependencies(p)}
 
-			paths[tileFrom.Kind][tileTo.Kind] = pathResult
-			paths[tileTo.Kind][tileFrom.Kind] = pathResult
+			paths[tileFrom.Kind.(MazeTileKind).Value][tileTo.Kind.(MazeTileKind).Value] = pathResult
+			paths[tileTo.Kind.(MazeTileKind).Value][tileFrom.Kind.(MazeTileKind).Value] = pathResult
 		}
 	}
 	return paths
@@ -52,9 +53,9 @@ func NewAllPaths(kPlusAt []*Tile) AllPaths {
 func calculateDependencies(p []goastar.Pather) []rune {
 	var dd []rune
 	for _, e := range p {
-		tile := e.(*Tile)
-		if unicode.IsUpper(tile.Kind) {
-			dd = append(dd, unicode.ToLower(tile.Kind))
+		tile := e.(*astar.Tile)
+		if unicode.IsUpper(tile.Kind.(MazeTileKind).Value) {
+			dd = append(dd, unicode.ToLower(tile.Kind.(MazeTileKind).Value))
 		}
 	}
 	return dd

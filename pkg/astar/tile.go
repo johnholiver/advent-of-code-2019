@@ -6,10 +6,14 @@ import (
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 )
 
+type Traversable interface {
+	IsTraversable(Traversable) bool
+}
+
 // A Tile is a tile in a grid which implements Pather.
 type Tile struct {
 	// Kind is the kind of tile, potentially affecting movement.
-	Kind rune
+	Kind Traversable
 	// X and Y are the coordinates of the tile.
 	X, Y int
 	// W is a reference to the World that the tile is a part of.
@@ -17,7 +21,7 @@ type Tile struct {
 }
 
 func (t *Tile) String() string {
-	return fmt.Sprintf("%c(%v,%v)", t.Kind, t.X, t.Y)
+	return fmt.Sprintf("%v(%v,%v)", t.Kind, t.X, t.Y)
 }
 
 // PathNeighbors returns the neighbors of the tile, excluding blockers and
@@ -30,8 +34,7 @@ func (t *Tile) PathNeighbors() []astar.Pather {
 		{0, -1},
 		{0, 1},
 	} {
-		if n := t.W.Get(t.X+offset[0], t.Y+offset[1]); n != nil &&
-			n.Value.(*Tile).Kind != '#' {
+		if n := t.W.Get(t.X+offset[0], t.Y+offset[1]); n != nil && t.Kind.IsTraversable(n.Value.(*Tile).Kind) {
 			neighbors = append(neighbors, n.Value.(*Tile))
 		}
 	}

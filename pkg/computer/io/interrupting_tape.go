@@ -32,6 +32,10 @@ func (io *InterruptingTape) Next() {
 	io.tape.Next()
 }
 
+func (io *InterruptingTape) CanRead() bool {
+	return io.tape.CanRead()
+}
+
 func (io *InterruptingTape) Read() int {
 	io.p.Interrupt()
 	return io.tape.Read()
