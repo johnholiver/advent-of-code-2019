@@ -49,10 +49,8 @@ func part1(file *os.File) string {
 	p := buildComputer(program)
 
 	sprintScript :=
-		`NOT D T
-NOT T J
-NOT C T
-AND T J
+		`NOT C J
+AND D J
 NOT A T
 OR T J
 WALK
@@ -94,7 +92,43 @@ func part2(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	program += ""
+	buildComputer := func(program string) *computer.Processor {
+		i := computer_io.NewTape()
+		p := computer.NewProcessor(i, nil, nil)
+		m := computer_mem.NewRelative(p, program)
+		p.Memory = m
+		o := computer_io.NewInterruptingTape(p)
+		p.Output = o
+		return p
+	}
 
-	return "implement me"
+	p := buildComputer(program)
+
+	sprintScript :=
+		`NOT C J
+AND D J
+AND H J
+NOT B T
+AND D T
+OR T J
+NOT A T
+OR T J
+RUN
+`
+
+	for _, i := range compileScript(sprintScript) {
+		p.Input.Append(i)
+	}
+
+	p.Process()
+	for p.Output.CanRead() {
+		p.Process()
+		output := p.Output.Read()
+		if output > 128 {
+			return fmt.Sprint(output)
+		}
+		fmt.Print(string(output))
+	}
+
+	return "Didn't work .-."
 }
