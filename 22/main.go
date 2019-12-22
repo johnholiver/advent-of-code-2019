@@ -6,6 +6,7 @@ import (
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
 	"io"
 	"log"
+	"math/big"
 	"os"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ func main() {
 func part1(file *os.File) string {
 	deckSize := 10007
 	scanner := bufio.NewScanner(file)
-	var instructions [][2]int
+	var instructions [][2]int64
 	for scanner.Scan() {
 		instructions = append(instructions, transformInstruction(scanner.Text(), deckSize))
 	}
@@ -36,11 +37,11 @@ func part1(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	deck := NewDeck(deckSize)
+	deck := NewSmallDeck(deckSize)
 	SlamShuffle(deck, instructions)
 
 	pos2019 := -1
-	for i, v := range deck {
+	for i, v := range *deck {
 		if v == 2019 {
 			pos2019 = i
 			break
@@ -50,8 +51,8 @@ func part1(file *os.File) string {
 	return fmt.Sprint(pos2019)
 }
 
-func transformInstruction(instr string, deckSize int) [2]int {
-	var instrInt [2]int
+func transformInstruction(instr string, deckSize int) [2]int64 {
+	var instrInt [2]int64
 	instrs := strings.Split(instr, " ")
 	switch instrs[0] {
 	case "cut":
@@ -60,13 +61,13 @@ func transformInstruction(instr string, deckSize int) [2]int {
 			arg += deckSize
 		}
 		instrInt[0] = 0
-		instrInt[1] = arg
+		instrInt[1] = int64(arg)
 	case "deal":
 		switch instrs[1] {
 		case "with":
 			arg, _ := strconv.Atoi(instrs[3])
 			instrInt[0] = 1
-			instrInt[1] = arg
+			instrInt[1] = int64(arg)
 		case "into":
 			instrInt[0] = 2
 		}
@@ -76,45 +77,51 @@ func transformInstruction(instr string, deckSize int) [2]int {
 	return instrInt
 }
 
-type Deck []int
-
-func NewDeck(size int) Deck {
-	deck := make([]int, size)
-	for i, _ := range deck {
-		deck[i] = i
-	}
-	return deck
+type Deck interface {
+	DealReverse()
+	CutN(c int64)
+	DealIncrement(inc int64)
 }
 
-func (d Deck) DealReverse() {
+type SmallDeck []int64
+
+func NewSmallDeck(size int) *SmallDeck {
+	deck := make(SmallDeck, size)
+	for i, _ := range deck {
+		deck[i] = int64(i)
+	}
+	return &deck
+}
+
+func (d SmallDeck) DealReverse() {
 	for i, j := 0, len(d)-1; i < j; i, j = i+1, j-1 {
 		d[i], d[j] = d[j], d[i]
 	}
 }
 
-func (d Deck) CutN(c int) {
+func (d SmallDeck) CutN(c int64) {
 	if c < 0 {
-		c += len(d)
+		c += int64(len(d))
 	}
 	aux := append(d[c:], d[:c]...)
 	d.replace(aux)
 }
 
-func (d Deck) replace(aux []int) {
+func (d SmallDeck) replace(aux []int64) {
 	for i := 0; i < len(d); i++ {
 		d[i] = aux[i]
 	}
 }
 
-func (d Deck) DealIncrement(inc int) {
-	aux := make([]int, len(d))
-	for i, j := 0, 0; i < len(d); i, j = i+1, (j+inc)%len(d) {
+func (d SmallDeck) DealIncrement(inc int64) {
+	aux := make([]int64, len(d))
+	for i, j := 0, 0; i < len(d); i, j = i+1, (j+int(inc))%len(d) {
 		aux[j] = d[i]
 	}
 	d.replace(aux)
 }
 
-func SlamShuffle(deck Deck, instructions [][2]int) {
+func SlamShuffle(deck Deck, instructions [][2]int64) {
 	for _, instr := range instructions {
 		switch instr[0] {
 		case 0:
@@ -133,77 +140,81 @@ func SlamShuffle(deck Deck, instructions [][2]int) {
 //Next idea... run the instructions backwards trying to find out what will be the destiny of pos 2020
 func part2(file *os.File) string {
 	deckSize := 119315717514047
+	shuffleTimes := 101741582076661
 	scanner := bufio.NewScanner(file)
-	var instructions [][2]int
+	var instructions [][2]int64
 	for scanner.Scan() {
 		instructions = append(instructions, transformInstruction(scanner.Text(), deckSize))
 	}
 
-	//Reverse the instructions
-	for i, j := 0, len(instructions)-1; i < j; i, j = i+1, j-1 {
-		instructions[i], instructions[j] = instructions[j], instructions[i]
-	}
+	deck := NewBigDeck(deckSize)
+	SlamShuffle(deck, instructions)
 
-	revEngPos := 2020
-	for cnt := 0; cnt < 101741582076661; cnt++ {
-		revEngPos = ReverseFakeSlamShuffle(cnt, revEngPos, deckSize, instructions)
-	}
+	offsetDiff := deck.offset
+	incrementMul := deck.increment
+	card := big.NewInt(2020)
 
-	return fmt.Sprint(revEngPos)
+	increment := new(big.Int).Exp(incrementMul, big.NewInt(int64(shuffleTimes)), deck.size)
+
+	offset := new(big.Int).Mul(
+		offsetDiff,
+		new(big.Int).Mul(
+			new(big.Int).Add(increment, new(big.Int).Sub(deck.size, big.NewInt(1))),
+			new(big.Int).Exp(new(big.Int).Sub(incrementMul, big.NewInt(1)), new(big.Int).Sub(deck.size, big.NewInt(2)), deck.size),
+		),
+	)
+
+	answer := new(big.Int)
+
+	answer.Mul(increment, card)
+	answer.Add(answer, offset)
+	answer.Mod(answer, deck.size)
+
+	return fmt.Sprint(answer)
 }
 
-func ReverseFakeSlamShuffle(cnt, pos, deckSize int, instructions [][2]int) int {
-	for i, instr := range instructions {
-		start := pos
-		switch instr[0] {
-		case 0:
-			pos = reverseCut(deckSize, instr[1], pos)
-		case 1:
-			pos = reverseIncrement(deckSize, instr[1], pos)
-		case 2:
-			pos = reverseSort(deckSize, pos)
-		default:
-			panic("No known instruction")
-		}
-		if start == 2020 {
-			fmt.Printf("%v|%v: %v - %v\n", cnt, i, start, pos)
-		}
-	}
-	return pos
+type BigDeck struct {
+	offset    *big.Int
+	increment *big.Int
+	size      *big.Int
 }
 
-func reverseSort(len, newPos int) int {
-	return len - 1 - newPos
+func NewBigDeck(size int) *BigDeck {
+	return &BigDeck{big.NewInt(0), big.NewInt(1), big.NewInt(int64(size))}
 }
 
-// How to use it!!
-// (2 + x) % 8 = 3
-// var res = ReverseModulus(8,2,3); // res = 1
-// or...
-// (cut + oldPos) % len = newPos
-func reverseCut(deckLen, cut, newPos int) int {
-	if newPos >= deckLen {
-		panic("Remainder cannot be greater than or equal to divisor")
-	}
-	if cut <= newPos {
-		return newPos - cut
-	}
-	return deckLen + newPos - cut
+func (d *BigDeck) applyMod() {
+	d.increment.Mod(d.increment, d.size)
+	d.offset.Mod(d.offset, d.size)
 }
 
-// (inc * olfPos) % len = newPos
-func reverseIncrement(deckLen, inc, newPos int) int {
-	if newPos >= deckLen {
-		panic("Remainder cannot be greater than or equal to divisor")
-	}
+func (d *BigDeck) DealReverse() {
+	d.increment.Mul(d.increment, big.NewInt(-1))
+	d.offset.Add(d.offset, d.increment)
 
-	div := -1
-	for x := 0; x < inc; x++ {
-		if (x*deckLen+newPos)%inc == 0 {
-			div = x
-			break
-		}
-	}
+	d.applyMod()
+}
 
-	return (div*deckLen + newPos) / inc
+func (d *BigDeck) CutN(c int64) {
+	if c < 0 {
+		c += d.size.Int64()
+	}
+	d.offset.Add(d.offset, new(big.Int).Mul(d.increment, big.NewInt(c)))
+
+	d.applyMod()
+}
+
+func (d *BigDeck) DealIncrement(inc int64) {
+	a := big.NewInt(inc)
+
+	//According to reddit (euler theorem), but didn't worked as I expected
+	// For inc = 3, and deck size of 10, inv = 1, while it should be 7
+	//b := new(big.Int).Sub(d.size, big.NewInt(2))
+	//inv := new(big.Int).Exp(a, b, d.size)
+
+	inv := new(big.Int).ModInverse(a, d.size)
+
+	d.increment.Mul(d.increment, inv)
+
+	d.applyMod()
 }
