@@ -43,10 +43,21 @@ func part1(file *os.File) string {
 
 	paths := pathfinder.NewAllPaths(kPlusAt)
 
-	_, root := buildDependencyTree(at, ks, paths)
+	atK, leftKs := simplifyDependencyTreeInput(at, ks)
+
+	_, root := buildDependencyTree(atK, leftKs, paths)
 	_, c := leastCostyPath(paths, root)
 
 	return fmt.Sprint(c)
+}
+
+func simplifyDependencyTreeInput(at *astar.Tile, ks []*astar.Tile) (rune, []rune) {
+	atK := at.Kind.(pathfinder.MazeTileKind).Value
+	leftKs := make([]rune, len(ks))
+	for i, k := range ks {
+		leftKs[i] = k.Kind.(pathfinder.MazeTileKind).Value
+	}
+	return atK, leftKs
 }
 
 func part2(file *os.File) string {
@@ -141,14 +152,10 @@ func depTreeFormatter(e interface{}) string {
 	return e.(*DependencyNode).String()
 }
 
-func buildDependencyTree(at *astar.Tile, ks []*astar.Tile, paths pathfinder.AllPaths) (*graph.Graph, *graph.Node) {
+func buildDependencyTree(atK rune, leftKs []rune, paths pathfinder.AllPaths) (*graph.Graph, *graph.Node) {
 	depGraph := graph.NewGraph()
 	depGraph.SetFormatter(depTreeFormatter)
-	atN := depGraph.BuildBranch(NewDependencyNode(at.Kind.(pathfinder.MazeTileKind).Value), nil)
-	leftKs := make([]rune, len(ks))
-	for i, k := range ks {
-		leftKs[i] = k.Kind.(pathfinder.MazeTileKind).Value
-	}
+	atN := depGraph.BuildBranch(NewDependencyNode(atK), nil)
 	recursiveAddTreeBranch(paths, depGraph, leftKs, atN, atN.Value.(*DependencyNode).MinCost)
 	return depGraph, atN
 }

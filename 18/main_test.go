@@ -226,6 +226,46 @@ func Test_AStar(t *testing.T) {
 }
 
 func Test_DependencyGraph(t *testing.T) {
+	at := '@'
+	ks := []rune{'a', 'b', 'c', 'd'}
+	pSize := 1 + len(ks)
+
+	paths := make(pathfinder.AllPaths, pSize)
+	paths['@'] = make(map[rune]*pathfinder.OnePath, pSize)
+	paths['@']['a'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+	paths['@']['b'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'a'}}
+	paths['@']['c'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'a'}}
+	paths['@']['d'] = &pathfinder.OnePath{Distance: 3, Dependencies: []rune{'a', 'c'}}
+
+	paths['a'] = make(map[rune]*pathfinder.OnePath, pSize)
+	paths['a']['@'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+	paths['a']['b'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+	paths['a']['c'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+	paths['a']['d'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'c'}}
+
+	paths['b'] = make(map[rune]*pathfinder.OnePath, pSize)
+	paths['b']['@'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'a'}}
+	paths['b']['a'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+	paths['b']['c'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'a'}}
+	paths['b']['d'] = &pathfinder.OnePath{Distance: 3, Dependencies: []rune{'a', 'c'}}
+
+	paths['c'] = make(map[rune]*pathfinder.OnePath, pSize)
+	paths['c']['@'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'a'}}
+	paths['c']['a'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+	paths['c']['b'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'a'}}
+	paths['c']['d'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+
+	paths['d'] = make(map[rune]*pathfinder.OnePath, pSize)
+	paths['d']['@'] = &pathfinder.OnePath{Distance: 3, Dependencies: []rune{'a', 'c'}}
+	paths['d']['a'] = &pathfinder.OnePath{Distance: 2, Dependencies: []rune{'c'}}
+	paths['d']['b'] = &pathfinder.OnePath{Distance: 3, Dependencies: []rune{'a', 'c'}}
+	paths['d']['c'] = &pathfinder.OnePath{Distance: 1, Dependencies: []rune{}}
+
+	depTree, _ := buildDependencyTree(at, ks, paths)
+	fmt.Println(depTree)
+}
+
+func Test_debug_DependencyGraph(t *testing.T) {
 	g := buildGrid(maze2)
 	at, ks, _ := fetchKeys(g)
 
@@ -233,7 +273,9 @@ func Test_DependencyGraph(t *testing.T) {
 
 	paths := pathfinder.NewAllPaths(ksPlusAt)
 
-	depTree, _ := buildDependencyTree(at, ks, paths)
+	atK, leftKs := simplifyDependencyTreeInput(at, ks)
+
+	depTree, _ := buildDependencyTree(atK, leftKs, paths)
 	fmt.Println(depTree)
 }
 
@@ -260,7 +302,10 @@ func Test_leastCostyPath(t *testing.T) {
 			at, ks, _ := fetchKeys(g)
 			ksPlusAt := append(ks, at)
 			paths := pathfinder.NewAllPaths(ksPlusAt)
-			_, root := buildDependencyTree(at, ks, paths)
+
+			atK, leftKs := simplifyDependencyTreeInput(at, ks)
+
+			_, root := buildDependencyTree(atK, leftKs, paths)
 			p, c := leastCostyPath(paths, root)
 			if c != tt.want {
 				t.Errorf("fetchKeys() got = %v, want %v", c, tt.want)
