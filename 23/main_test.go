@@ -48,36 +48,6 @@ func Test_OneNic1(t *testing.T) {
 	time.Sleep(5 * time.Second)
 }
 
-func Test_OneNicOneMessage(t *testing.T) {
-	nic := network.NewController(30, program)
-	nic.SetDebugMode(true)
-
-	fakeMessage := network.NewIntPairPacket(0, 30, 41957, 19153)
-	nic.QueuePush(fakeMessage)
-	go func() {
-		nic.Exec()
-	}()
-	time.Sleep(5 * time.Second)
-	assert.Equal(t, 30, nic.P.Output.ReadAt(0))
-	assert.Equal(t, 41957, nic.P.Output.ReadAt(1))
-	assert.Equal(t, 19153, nic.P.Output.ReadAt(2))
-	assert.Equal(t, 37, nic.P.Output.ReadAt(3))
-	assert.Equal(t, 16657, nic.P.Output.ReadAt(4))
-	assert.Equal(t, 19153, nic.P.Output.ReadAt(5))
-	assert.Equal(t, 37, nic.P.Output.ReadAt(6))
-	assert.Equal(t, 49971, nic.P.Output.ReadAt(7))
-	assert.Equal(t, 19153, nic.P.Output.ReadAt(8))
-	assert.Equal(t, 22, nic.P.Output.ReadAt(9))
-	assert.Equal(t, 93283, nic.P.Output.ReadAt(10))
-	assert.Equal(t, 19153, nic.P.Output.ReadAt(11))
-	assert.Equal(t, 22, nic.P.Output.ReadAt(12))
-	assert.Equal(t, 186566, nic.P.Output.ReadAt(13))
-	assert.Equal(t, 19153, nic.P.Output.ReadAt(14))
-	assert.Equal(t, 22, nic.P.Output.ReadAt(15))
-	assert.Equal(t, 279849, nic.P.Output.ReadAt(16))
-	assert.Equal(t, 19153, nic.P.Output.ReadAt(17))
-}
-
 func Test_OneNicTwoMessage(t *testing.T) {
 	nic := network.NewController(0, program)
 	nic.SetDebugMode(true)
@@ -100,7 +70,7 @@ func Test_OneNicTwoMessage(t *testing.T) {
 }
 
 func Test_TwoNicOneRouter(t *testing.T) {
-	router := network.NewRouter(nil)
+	router := network.NewRouter()
 	router.SetDebugMode(true)
 
 	nic0 := network.NewController(0, program)

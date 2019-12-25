@@ -66,6 +66,9 @@ func NewMultiverseCell(bug bool, x, y int, w *World) Cell {
 }
 
 func (c *MultiverseCell) String() string {
+	if c.C.X == 2 && c.C.Y == 2 {
+		return fmt.Sprintf("?")
+	}
 	return c.C.String()
 }
 
@@ -86,8 +89,11 @@ func (c *MultiverseCell) CountNeighbors() int {
 		if nc != nil {
 			mvC := nc.(*MultiverseCell)
 			if mvC.C.X == 2 && mvC.C.Y == 2 {
-				//Special count of 5 cells on one of the sides of the MV depth -1
-				inW := w.Multiverse.GetWorld(w.depth - 1)
+				//Special count of 5 cells on one of the sides of the MV depth +1
+				inW := w.Multiverse.GetWorld(w.depth + 1)
+				if inW == nil {
+					continue
+				}
 
 				inOffsets := map[[2]int][][2]int{
 					{-1, 0}: {{4, 0}, {4, 1}, {4, 2}, {4, 3}, {4, 4}}, //right border
@@ -107,9 +113,12 @@ func (c *MultiverseCell) CountNeighbors() int {
 				around++
 			}
 		} else {
-			//Special count of 1 big cell on one of the sides of the center of the MV depth +1
+			//Special count of 1 big cell on one of the sides of the center of the MV depth -1
 			outW := w.Multiverse.GetWorld(w.depth - 1)
-			if nc, _ = outW.GetCell(2-offset[0], 2-offset[1]); nc != nil && nc.HasBug() {
+			if outW == nil {
+				continue
+			}
+			if nc, _ = outW.GetCell(2+offset[0], 2+offset[1]); nc != nil && nc.HasBug() {
 				around++
 			}
 		}

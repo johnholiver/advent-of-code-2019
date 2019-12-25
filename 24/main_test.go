@@ -57,7 +57,8 @@ var inputEmpty = `.....
 `
 
 func Test_NewEmptyWorld(t *testing.T) {
-	w := life.NewEmptyWorld(5, 5, 0)
+	w := life.NewWorld(5, 5, 0)
+	w.FillEmpty(life.NewMonoverseCell)
 	assert.Equal(t, inputEmpty, w.String())
 }
 func Test_WorldString(t *testing.T) {
@@ -86,7 +87,23 @@ func Test_WorldBiodiversityRating(t *testing.T) {
 func Test_Multiverse(t *testing.T) {
 	w := buildWorld(input0, life.NewMultiverseCell)
 	mv := life.NewMultiverse(w)
+	mv.OutterDepth = -2
+	mv.InnerDepth = 2
 	fmt.Println(mv)
 	mv.Tick()
 	fmt.Println(mv)
+	mv.Tick()
+	fmt.Println(mv)
+}
+
+func Test_MultiverseAoC(t *testing.T) {
+	w := buildWorld(input0, life.NewMultiverseCell)
+	mv := life.NewMultiverse(w)
+	mv.OutterDepth = -5
+	mv.InnerDepth = 5
+
+	for i := 1; i <= 10; i++ {
+		mv.Tick()
+	}
+	assert.Equal(t, 99, mv.CountBugs())
 }

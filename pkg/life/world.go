@@ -22,20 +22,13 @@ func NewWorld(width, height, depth int) *World {
 	}
 }
 
-func NewEmptyWorld(width, height, depth int) *World {
-	w := &World{
-		cells:  make([]Cell, width*height),
-		depth:  depth,
-		width:  width,
-		height: height,
-	}
+func (w *World) FillEmpty(cellBuilder func(bool, int, int, *World) Cell) {
 	for y := 0; y < 5; y++ {
 		for x := 0; x < 5; x++ {
-			c := NewMonoverseCell(false, x, y, w)
+			c := cellBuilder(false, x, y, w)
 			w.SetCell(x, y, c)
 		}
 	}
-	return w
 }
 
 func (w *World) String() string {
@@ -94,7 +87,13 @@ func (w *World) Tick() *World {
 				}
 			}
 
-			nc := NewMonoverseCell(newHasBug, x, y, w2)
+			var nc Cell
+			if _, ok := c.(*MonoverseCell); ok {
+				nc = NewMonoverseCell(newHasBug, x, y, w2)
+			}
+			if _, ok := c.(*MultiverseCell); ok {
+				nc = NewMultiverseCell(newHasBug, x, y, w2)
+			}
 			w2.SetCell(x, y, nc)
 		}
 	}
@@ -104,7 +103,7 @@ func (w *World) Tick() *World {
 func (w *World) CountBugs() int {
 	cnt := 0
 	for pos := 0; pos < len(w.cells); pos++ {
-		if w.cells[pos].HasBug() == true {
+		if pos != 12 && w.cells[pos].HasBug() == true {
 			cnt += 1
 		}
 	}
