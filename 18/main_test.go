@@ -213,7 +213,7 @@ func Test_AStar(t *testing.T) {
 	g := buildGrid(maze1)
 	at, k, _ := fetchKeys(g)
 
-	kPlusAt := append(k, at)
+	kPlusAt := append(k, at[0])
 
 	paths := pathfinder.NewAllPaths(kPlusAt)
 
@@ -279,7 +279,7 @@ func Test_debug_DependencyGraph(t *testing.T) {
 	fmt.Println(depTree)
 }
 
-func Test_leastCostyPath(t *testing.T) {
+func Test_buildDependencyTree(t *testing.T) {
 	type args struct {
 		input string
 	}
@@ -300,7 +300,7 @@ func Test_leastCostyPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			g := buildGrid(tt.args.input)
 			at, ks, _ := fetchKeys(g)
-			ksPlusAt := append(ks, at)
+			ksPlusAt := append(ks, at[0])
 			paths := pathfinder.NewAllPaths(ksPlusAt)
 
 			atK, leftKs := simplifyDependencyTreeInput(at, ks)
@@ -312,6 +312,35 @@ func Test_leastCostyPath(t *testing.T) {
 			//if !reflect.DeepEqual(p, tt.want1) {
 			//	t.Errorf("fetchKeys() got1 = %v, want %v", p, tt.want1)
 			//}
+		})
+	}
+}
+
+func Test_part2(t *testing.T) {
+	type args struct {
+		input string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{"input", args{maze_input}, 2082},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := buildGrid(tt.args.input)
+			fixGrid(g)
+			ats, ks, _ := fetchKeys(g)
+			ksPlusAt := append(ks, ats...)
+			paths := pathfinder.NewAllPaths(ksPlusAt)
+
+			atK, leftKs := simplifyDependencyTreeInput(ats, ks)
+
+			_, root := buildDependencyTree(atK, leftKs, paths)
+			if root.Value.(*DependencyNode).MinCost != tt.want {
+				t.Errorf("fetchKeys() got = %v, want %v", root.Value.(*DependencyNode).MinCost, tt.want)
+			}
 		})
 	}
 }

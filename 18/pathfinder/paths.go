@@ -38,7 +38,7 @@ func NewAllPaths(tiles []*astar.Tile) AllPaths {
 			tileTo := tiles[j]
 			p, dist, found := goastar.Path(tileFrom, tileTo)
 			if !found {
-				panic("AHHH!")
+				continue
 			}
 
 			pathResult := &OnePath{p, dist, calculateDependencies(p)}

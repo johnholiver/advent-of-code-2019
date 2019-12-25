@@ -8,7 +8,6 @@ import (
 	"github.com/johnholiver/advent-of-code-2019/pkg/graph"
 	"github.com/johnholiver/advent-of-code-2019/pkg/grid"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
-	"io"
 	"log"
 	"os"
 	"sort"
@@ -22,9 +21,9 @@ func main() {
 	}
 	defer file.Close()
 
-	fmt.Printf("Result part1: %v\n", part1(file))
-
-	file.Seek(0, io.SeekStart)
+	//fmt.Printf("Result part1: %v\n", part1(file))
+	//
+	//file.Seek(0, io.SeekStart)
 	fmt.Printf("Result part2: %v\n", part2(file))
 }
 
@@ -39,20 +38,20 @@ func part1(file *os.File) string {
 		log.Fatal(err)
 	}
 
-	at, ks, _ := fetchKeys(buildGrid(input))
-	kPlusAt := append(ks, at)
+	ats, ks, _ := fetchKeys(buildGrid(input))
+	kPlusAt := append(ks, ats...)
 
 	paths := pathfinder.NewAllPaths(kPlusAt)
 
-	atK, leftKs := simplifyDependencyTreeInput(at, ks)
+	atK, leftKs := simplifyDependencyTreeInput(ats, ks)
 
 	_, root := buildDependencyTree(atK, leftKs, paths)
 
 	return fmt.Sprint(root.Value.(*DependencyNode).MinCost)
 }
 
-func simplifyDependencyTreeInput(at *astar.Tile, ks []*astar.Tile) (rune, []rune) {
-	atK := at.Kind.(pathfinder.MazeTileKind).Value
+func simplifyDependencyTreeInput(at []*astar.Tile, ks []*astar.Tile) (rune, []rune) {
+	atK := at[0].Kind.(pathfinder.MazeTileKind).Value
 	leftKs := make([]rune, len(ks))
 	for i, k := range ks {
 		leftKs[i] = k.Kind.(pathfinder.MazeTileKind).Value
@@ -70,10 +69,53 @@ func part2(file *os.File) string {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	g := buildGrid(input)
 
-	//k,d:=fetchKeys(buildGrid(input))
+	fixGrid(g)
 
-	return "implement me"
+	ats, ks, _ := fetchKeys(g)
+	kPlusAt := append(ks, ats...)
+
+	paths := pathfinder.NewAllPaths(kPlusAt)
+
+	atK, leftKs := simplifyDependencyTreeInput(ats, ks)
+
+	fmt.Println(paths)
+
+	_, root := buildDependencyTree(atK, leftKs, paths)
+
+	return fmt.Sprint(root.Value.(*DependencyNode).MinCost)
+}
+
+func fixGrid(g *grid.Grid) {
+	var atPos *[2]int
+	atPos = nil
+	for y := 0; y < g.Height; y++ {
+		for x := 0; x < g.Width; x++ {
+			if g.Get(x, y).Value.(*astar.Tile).Kind.(pathfinder.MazeTileKind).Value == '@' {
+				atPos = &[2]int{x, y}
+				break
+			}
+		}
+		if atPos != nil {
+			break
+		}
+	}
+
+	vaultFixer := map[[2]int]rune{
+		{-1, -1}: '@',
+		{-1, 0}:  '#',
+		{-1, 1}:  '@',
+		{0, -1}:  '#',
+		{0, 0}:   '#',
+		{0, 1}:   '#',
+		{1, -1}:  '@',
+		{1, 0}:   '#',
+		{1, 1}:   '@',
+	}
+	for offset, c := range vaultFixer {
+		g.Get(atPos[0]+offset[0], atPos[1]+offset[1]).Value.(*astar.Tile).Kind = pathfinder.MazeTileKind{c}
+	}
 }
 
 func buildGrid(input string) *grid.Grid {
@@ -108,8 +150,8 @@ func tileFormatter(e interface{}) string {
 	return e.(*astar.Tile).Kind.(pathfinder.MazeTileKind).String()
 }
 
-func fetchKeys(g *grid.Grid) (*astar.Tile, []*astar.Tile, []*astar.Tile) {
-	var at *astar.Tile
+func fetchKeys(g *grid.Grid) ([]*astar.Tile, []*astar.Tile, []*astar.Tile) {
+	var ats []*astar.Tile
 	var keys []*astar.Tile
 	var doors []*astar.Tile
 
@@ -118,7 +160,7 @@ func fetchKeys(g *grid.Grid) (*astar.Tile, []*astar.Tile, []*astar.Tile) {
 			vp := g.Get(x, y)
 			c := vp.Value.(*astar.Tile).Kind.(pathfinder.MazeTileKind).Value
 			if c == '@' {
-				at = vp.Value.(*astar.Tile)
+				ats = append(ats, vp.Value.(*astar.Tile))
 			}
 			if unicode.IsLower(c) {
 				keys = append(keys, vp.Value.(*astar.Tile))
@@ -129,7 +171,7 @@ func fetchKeys(g *grid.Grid) (*astar.Tile, []*astar.Tile, []*astar.Tile) {
 
 		}
 	}
-	return at, keys, doors
+	return ats, keys, doors
 }
 
 type DependencyNode struct {
