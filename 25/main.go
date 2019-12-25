@@ -3,10 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/johnholiver/advent-of-code-2019/pkg/computer"
+	computer_io "github.com/johnholiver/advent-of-code-2019/pkg/computer/io"
+	computer_mem "github.com/johnholiver/advent-of-code-2019/pkg/computer/memory"
 	"github.com/johnholiver/advent-of-code-2019/pkg/input"
-	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -17,35 +20,53 @@ func main() {
 	defer file.Close()
 
 	fmt.Printf("Result part1: %v\n", part1(file))
-
-	file.Seek(0, io.SeekStart)
-	fmt.Printf("Result part2: %v\n", part2(file))
 }
 
 func part1(file *os.File) string {
 	scanner := bufio.NewScanner(file)
+	var program string
 	for scanner.Scan() {
-		//TODO: Massage the input, line by line
-		fmt.Println(scanner.Text())
+		program = scanner.Text()
 	}
 
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	return "implement me"
-}
-
-func part2(file *os.File) string {
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		//TODO: Massage the input, line by line
-		fmt.Println(scanner.Text())
+	buildComputer := func(program string) *computer.Processor {
+		i := computer_io.NewTape()
+		p := computer.NewProcessor(i, nil, nil)
+		m := computer_mem.NewRelative(p, program)
+		p.Memory = m
+		o := computer_io.NewInterruptingTape(p)
+		p.Output = o
+		return p
 	}
 
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
+	p := buildComputer(program)
 
-	return "implement me"
+	fmt.Println("Password is 4362. Items needed: coin, hypercube, hologram, cake.")
+
+	p.Process()
+
+	for {
+		roomOutput := ""
+		for p.Output.CanRead() {
+			p.Process()
+			roomOutput += string(rune(p.Output.Read()))
+
+			if strings.HasSuffix(roomOutput, "Command?") {
+				break
+			}
+		}
+		fmt.Printf("%v", roomOutput)
+
+		reader := bufio.NewReader(os.Stdin)
+		input, _ := reader.ReadString('\n')
+
+		for _, c := range input {
+			p.Input.Append(int(c))
+		}
+
+	}
 }
