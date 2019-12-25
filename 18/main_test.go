@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/johnholiver/advent-of-code-2019/18/pathfinder"
 	"github.com/stretchr/testify/assert"
-	"reflect"
+	//"reflect"
 	"testing"
 )
 
@@ -289,12 +289,12 @@ func Test_leastCostyPath(t *testing.T) {
 		want  int
 		want1 []rune
 	}{
-		//{"1", args{maze1}, 8,[]rune{'@','a','b'}},
-		//{"2", args{maze2}, 86,[]rune{'@','a','b','c','d','e','f'}},
-		//{"3", args{maze3}, 132, []rune{'@','b', 'a', 'c', 'd', 'f', 'e', 'g'}},
+		{"1", args{maze1}, 8, []rune{'@', 'a', 'b'}},
+		{"2", args{maze2}, 86, []rune{'@', 'a', 'b', 'c', 'd', 'e', 'f'}},
+		{"3", args{maze3}, 132, []rune{'@', 'b', 'a', 'c', 'd', 'f', 'e', 'g'}},
 		{"4", args{maze4}, 136, []rune{'@', 'a', 'f', 'b', 'j', 'g', 'n', 'h', 'd', 'l', 'o', 'e', 'p', 'c', 'i', 'k', 'm'}},
-		//{"5", args{maze5}, 81, []rune{'@','a','c','f','i','d','g','b','e','h'}},
-		//{"input", args{maze_input}, maze_input},
+		{"5", args{maze5}, 81, []rune{'@', 'a', 'c', 'f', 'i', 'd', 'g', 'b', 'e', 'h'}},
+		{"input", args{maze_input}, 5288, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -306,13 +306,12 @@ func Test_leastCostyPath(t *testing.T) {
 			atK, leftKs := simplifyDependencyTreeInput(at, ks)
 
 			_, root := buildDependencyTree(atK, leftKs, paths)
-			p, c := leastCostyPath(paths, root)
-			if c != tt.want {
-				t.Errorf("fetchKeys() got = %v, want %v", c, tt.want)
+			if root.Value.(*DependencyNode).MinCost != tt.want {
+				t.Errorf("fetchKeys() got = %v, want %v", root.Value.(*DependencyNode).MinCost, tt.want)
 			}
-			if !reflect.DeepEqual(p, tt.want1) {
-				t.Errorf("fetchKeys() got1 = %v, want %v", p, tt.want1)
-			}
+			//if !reflect.DeepEqual(p, tt.want1) {
+			//	t.Errorf("fetchKeys() got1 = %v, want %v", p, tt.want1)
+			//}
 		})
 	}
 }

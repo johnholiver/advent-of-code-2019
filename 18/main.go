@@ -11,6 +11,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sort"
 	"unicode"
 )
 
@@ -46,9 +47,8 @@ func part1(file *os.File) string {
 	atK, leftKs := simplifyDependencyTreeInput(at, ks)
 
 	_, root := buildDependencyTree(atK, leftKs, paths)
-	_, c := leastCostyPath(paths, root)
 
-	return fmt.Sprint(c)
+	return fmt.Sprint(root.Value.(*DependencyNode).MinCost)
 }
 
 func simplifyDependencyTreeInput(at *astar.Tile, ks []*astar.Tile) (rune, []rune) {
@@ -156,11 +156,12 @@ func buildDependencyTree(atK rune, leftKs []rune, paths pathfinder.AllPaths) (*g
 	depGraph := graph.NewGraph()
 	depGraph.SetFormatter(depTreeFormatter)
 	atN := depGraph.BuildBranch(NewDependencyNode(atK), nil)
-	recursiveAddTreeBranch(paths, depGraph, leftKs, atN, atN.Value.(*DependencyNode).MinCost)
+	cache := make(map[string]int)
+	recursiveAddTreeBranch(paths, depGraph, cache, leftKs, atN, atN.Value.(*DependencyNode).MinCost)
 	return depGraph, atN
 }
 
-func recursiveAddTreeBranch(paths pathfinder.AllPaths, depGraph *graph.Graph, leftK []rune, parent *graph.Node, maxCost int) int {
+func recursiveAddTreeBranch(paths pathfinder.AllPaths, depGraph *graph.Graph, cache map[string]int, leftK []rune, parent *graph.Node, maxCost int) int {
 	indexOf := func(slice []rune, val rune) (int, bool) {
 		for i, item := range slice {
 			if item == val {
@@ -173,6 +174,17 @@ func recursiveAddTreeBranch(paths pathfinder.AllPaths, depGraph *graph.Graph, le
 	if len(leftK) == 0 {
 		parent.Value.(*DependencyNode).MinCost = 0
 		return 0
+	}
+
+	leftKCacheKey := make([]rune, len(leftK))
+	copy(leftKCacheKey, leftK)
+	sort.Slice(leftKCacheKey, func(i, j int) bool { return leftKCacheKey[i] < leftKCacheKey[j] })
+	cacheKey := string(parent.Value.(*DependencyNode).Value)
+	for _, c := range leftKCacheKey {
+		cacheKey += string(c)
+	}
+	if cached, ok := cache[cacheKey]; ok {
+		return cached
 	}
 
 	var nodeMinPath *graph.Node
@@ -204,7 +216,7 @@ func recursiveAddTreeBranch(paths pathfinder.AllPaths, depGraph *graph.Graph, le
 			if nodeMinPath != nil {
 				costCap = maxCost - nodeMinPath.Value.(*DependencyNode).MinCost
 			}
-			branchCost += recursiveAddTreeBranch(paths, depGraph, notKs, kN, costCap)
+			branchCost += recursiveAddTreeBranch(paths, depGraph, cache, notKs, kN, costCap)
 			//fmt.Printf("%v: Up [%c->%c] - leftover: %c\n",maxCost, parent.Value.(rune),k, leftK)
 
 			if nodeMinPath == nil ||
@@ -217,23 +229,8 @@ func recursiveAddTreeBranch(paths pathfinder.AllPaths, depGraph *graph.Graph, le
 
 	parent.AddChild(nodeMinPath)
 	parent.Value.(*DependencyNode).MinCost = nodeMinPath.Value.(*DependencyNode).MinCost
-	return parent.Value.(*DependencyNode).MinCost
-}
 
-func leastCostyPath(paths pathfinder.AllPaths, parent *graph.Node) ([]rune, int) {
-	if len(parent.Children) == 0 {
-		return []rune{parent.Value.(*DependencyNode).Value}, 0
-	}
-	var lcPath []rune
-	lcCost := int(^uint(0) >> 1)
-	for _, child := range parent.Children {
-		p, c := leastCostyPath(paths, child)
-		if c < lcCost {
-			lcPath = p
-			lcCost = c
-		}
-	}
-	newLcCost := lcCost + int(paths[parent.Value.(*DependencyNode).Value][lcPath[0]].Distance)
-	newLcPath := append([]rune{parent.Value.(*DependencyNode).Value}, lcPath...)
-	return newLcPath, newLcCost
+	cache[cacheKey] = parent.Value.(*DependencyNode).MinCost
+
+	return parent.Value.(*DependencyNode).MinCost
 }
