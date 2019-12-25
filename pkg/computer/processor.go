@@ -6,6 +6,7 @@ type Processor struct {
 	Memory        Memory
 	PC            int
 	RelativeAddr  int
+	WaitingInput  bool
 	isInterrupted bool
 	IsHalted      bool
 }
@@ -17,6 +18,7 @@ func NewProcessor(input IO, output IO, m Memory) *Processor {
 		m,
 		0,
 		0,
+		false,
 		true,
 		false,
 	}
@@ -42,6 +44,10 @@ func (p *Processor) ExecInstruction(instr Instruction) {
 		op2 := p.Memory.Read(p.PC+2, instr.pMode[1])
 		p.Memory.Write(p.PC+3, op1*op2, instr.pMode[2])
 	case OpcodeInput:
+		if !p.Input.CanRead() {
+			p.WaitingInput = true
+			break
+		}
 		p.Memory.Write(p.PC+1, p.Input.Read(), instr.pMode[0])
 	case OpcodeOutput:
 		p.Output.Append(p.Memory.Read(p.PC+1, instr.pMode[0]))
@@ -94,10 +100,14 @@ func (p *Processor) Halt() {
 }
 
 func (p *Processor) Process() error {
+	p.WaitingInput = false
 	p.isInterrupted = false
 	for {
 		instr := p.GetInstruction()
 		p.ExecInstruction(instr)
+		if p.WaitingInput {
+			break
+		}
 		p.NextInstruction(instr)
 		if p.isInterrupted || p.IsHalted {
 			break
